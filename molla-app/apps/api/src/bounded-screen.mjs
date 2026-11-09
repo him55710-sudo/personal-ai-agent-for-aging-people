@@ -46,13 +46,15 @@ export function verifyGoal(screen, scope, action, facts = {}) {
     const address = screen.nodes.filter(n => /\/(recipient_text_view|recipient_name|recipient_number|chips|contact_name)$/.test(n.resourceId));
     const body = screen.nodes.filter(n => /\/(compose_message_text|message_text|message_text_input)$/.test(n.resourceId) && /EditText/.test(n.className));
     const digits = action.recipient.phone.replace(/\D/g, '');
-    return address.some(n => n.label.replace(/\D/g, '') === digits) && body.some(n => n.label.trim() === scope.body.trim());
+    return address.length === 1 && address[0].label.replace(/\D/g, '') === digits && body.length === 1 && body[0].label.trim() === scope.body.trim();
   }
   // A single AOSP alarm row must contain the exact 24-hour time, label and enabled switch.
   // 12-hour/ambiguous/OEM layouts intentionally require a human check.
   const time = `${String(scope.hour).padStart(2, '0')}:${String(scope.minute).padStart(2, '0')}`;
+  if (facts.clockFormat !== '24') return false;
   return screen.nodes.filter(n => /\/alarm( clock)?_?item$|\/alarm_item$/.test(n.resourceId)).some(row => {
     const nodes = screen.nodes.filter(n => inside(row.bounds, n.bounds) && n.package === screen.package);
+    if (nodes.some(n => /\/(am_pm|ampm)$/.test(n.resourceId) || /^(AM|PM|오전|오후)$/i.test(n.label))) return false;
     return nodes.some(n => /\/(digital_clock|clock|time)$/.test(n.resourceId) && n.label.replace(/\s/g, '') === time)
       && nodes.some(n => /\/(label|alarm_label)$/.test(n.resourceId) && n.label === scope.label)
       && nodes.some(n => /\/(onoff|alarm_switch)$/.test(n.resourceId) && n.checked)

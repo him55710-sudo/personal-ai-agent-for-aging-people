@@ -27,6 +27,7 @@ export function fixtureAndroid(initial = 'home', { rejectEffects = false, wrongR
     if (command.startsWith('cat ')) return { stdout: screens[current] };
     if (command.startsWith('cmd package resolve-activity')) return { stdout: command.includes('SENDTO') ? 'com.android.messaging/.Compose' : 'com.android.deskclock/.HandleApiCalls' };
     if (command === 'settings get system font_scale') return { stdout: String(fontScale) };
+    if (command === 'settings get system time_12_24') return { stdout: '24' };
     if (command.startsWith('input ') || command.startsWith('am start') || command.startsWith('settings put')) {
       if (rejectEffects) throw new Error('fixture lost connection after dispatch');
       if (!wrongResult) {

@@ -11,7 +11,7 @@
       "source": "synthetic-ui-fixture",
       "goal": "font_size",
       "scopeHash": "8afe1179481faf901890ea70c9a24b0cbe5e470fced1b23855ee82963e11aaaf",
-      "startedAt": "2026-11-09T05:20:36.067Z",
+      "startedAt": "2026-11-09T05:21:38.815Z",
       "steps": [
         {
           "index": 1,
@@ -19,7 +19,7 @@
             "package": "com.android.settings",
             "screenType": "settings_navigation",
             "screenHash": "7b00328569ab4059d50dce0afd3d817b30220755bbd5f08da65882ba8313b1b7",
-            "capturedAt": "2026-11-09T05:20:36.074Z",
+            "capturedAt": "2026-11-09T05:21:38.822Z",
             "elements": [
               {
                 "id": "161fb0bcf217685f75e8",
@@ -54,7 +54,7 @@
             "package": "com.android.settings",
             "screenType": "settings_navigation",
             "screenHash": "7da0a2d872ec3f07d7e3eeab9be3a874ed919d39a02b9b6acfa1a56cf405acf8",
-            "capturedAt": "2026-11-09T05:20:36.080Z",
+            "capturedAt": "2026-11-09T05:21:38.828Z",
             "elements": [
               {
                 "id": "b76bbf7e785f0bb9ccad",
@@ -78,7 +78,7 @@
             "package": "com.android.settings",
             "screenType": "settings_navigation",
             "screenHash": "7da0a2d872ec3f07d7e3eeab9be3a874ed919d39a02b9b6acfa1a56cf405acf8",
-            "capturedAt": "2026-11-09T05:20:36.082Z",
+            "capturedAt": "2026-11-09T05:21:38.829Z",
             "elements": [
               {
                 "id": "b76bbf7e785f0bb9ccad",
@@ -115,7 +115,7 @@
             "package": "com.android.settings",
             "screenType": "font_size",
             "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
-            "capturedAt": "2026-11-09T05:20:36.087Z",
+            "capturedAt": "2026-11-09T05:21:38.831Z",
             "elements": [],
             "operations": [
               "back",
@@ -132,7 +132,7 @@
             "package": "com.android.settings",
             "screenType": "font_size",
             "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
-            "capturedAt": "2026-11-09T05:20:36.089Z",
+            "capturedAt": "2026-11-09T05:21:38.832Z",
             "elements": [],
             "operations": [
               "back",
@@ -162,7 +162,7 @@
             "package": "com.android.settings",
             "screenType": "font_size",
             "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
-            "capturedAt": "2026-11-09T05:20:36.093Z",
+            "capturedAt": "2026-11-09T05:21:38.835Z",
             "elements": [],
             "operations": [
               "back",
@@ -181,8 +181,8 @@
       },
       "outcome": "completed",
       "verified": true,
-      "elapsedMs": 26,
-      "finishedAt": "2026-11-09T05:20:36.093Z"
+      "elapsedMs": 21,
+      "finishedAt": "2026-11-09T05:21:38.836Z"
     },
     {
       "scenario": "sms_draft",
@@ -191,8 +191,8 @@
       "version": 1,
       "source": "synthetic-ui-fixture",
       "goal": "sms_draft",
-      "scopeHash": "b235edde81f31b3df824b6355c710c0a66dd89605e51d8cf7c3752158ca59629",
-      "startedAt": "2026-11-09T05:20:36.095Z",
+      "scopeHash": "45a27b604b8d5a33d0e20cf2faf5068d8d667a598d44109e73fa45593f0464d6",
+      "startedAt": "2026-11-09T05:21:38.837Z",
       "steps": [
         {
           "index": 1,
@@ -200,7 +200,7 @@
             "package": "outside_scope",
             "screenType": "outside_scope",
             "screenHash": "e99463b3391b4a41aaaf85911c7ad34d68d992a3ae7da8e9175ad6334059f71f",
-            "capturedAt": "2026-11-09T05:20:36.096Z",
+            "capturedAt": "2026-11-09T05:21:38.839Z",
             "elements": [],
             "operations": [
               "compose",
@@ -229,7 +229,7 @@
             "package": "com.android.messaging",
             "screenType": "sms_draft",
             "screenHash": "d2d94609b24d4be90685866e672bf77877ee4de29e0ecf133d2b40cb9491ac0d",
-            "capturedAt": "2026-11-09T05:20:36.101Z",
+            "capturedAt": "2026-11-09T05:21:38.842Z",
             "elements": [],
             "operations": [
               "compose",
@@ -248,7 +248,7 @@
       "outcome": "completed",
       "verified": true,
       "elapsedMs": 6,
-      "finishedAt": "2026-11-09T05:20:36.101Z"
+      "finishedAt": "2026-11-09T05:21:38.843Z"
     },
     {
       "scenario": "alarm",
@@ -258,7 +258,7 @@
       "source": "synthetic-ui-fixture",
       "goal": "alarm",
       "scopeHash": "98b182c96983fd0a290c2bbe75b665a94e23c82f7f9cb895dc5915473388b429",
-      "startedAt": "2026-11-09T05:20:36.102Z",
+      "startedAt": "2026-11-09T05:21:38.843Z",
       "steps": [
         {
           "index": 1,
@@ -266,7 +266,7 @@
             "package": "outside_scope",
             "screenType": "outside_scope",
             "screenHash": "e99463b3391b4a41aaaf85911c7ad34d68d992a3ae7da8e9175ad6334059f71f",
-            "capturedAt": "2026-11-09T05:20:36.103Z",
+            "capturedAt": "2026-11-09T05:21:38.844Z",
             "elements": [],
             "operations": [
               "set_alarm",
@@ -275,6 +275,7 @@
             ]
           },
           "facts": {
+            "clockFormat": "24",
             "exactTimeLabelEnabledOnceVisible": true
           },
           "goalVerified": true,
@@ -295,7 +296,7 @@
             "package": "com.android.deskclock",
             "screenType": "alarm",
             "screenHash": "5224df39dee2626bbcc1c9848328c9dc1b3fb58596f30762ae5655d5c004a811",
-            "capturedAt": "2026-11-09T05:20:36.107Z",
+            "capturedAt": "2026-11-09T05:21:38.848Z",
             "elements": [],
             "operations": [
               "set_alarm",
@@ -314,7 +315,7 @@
       "outcome": "completed",
       "verified": true,
       "elapsedMs": 6,
-      "finishedAt": "2026-11-09T05:20:36.108Z"
+      "finishedAt": "2026-11-09T05:21:38.849Z"
     }
   ]
 }

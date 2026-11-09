@@ -50,7 +50,10 @@ test('only allowlisted elements are sent to the model; instruction-like labels a
 test('same text in old SMS bubbles is not compose evidence; wrong alarm label/enabled state is not success', () => {
   const { action } = planned('sms_draft'); assert.equal(verifyGoal(parseScreen(screens.wrongSms, 'com.android.messaging'), action.scope, action), false);
   const alarm = planned('alarm').action;
-  for (const screen of [screens.alarm.replace('아침', '다른 알람'), screens.alarm.replace('checked="true"', 'checked="false"')]) assert.equal(verifyGoal(parseScreen(screen, 'com.android.deskclock'), alarm.scope, alarm), false);
+  for (const screen of [screens.alarm.replace('아침', '다른 알람'), screens.alarm.replace('checked="true"', 'checked="false"')]) assert.equal(verifyGoal(parseScreen(screen, 'com.android.deskclock'), alarm.scope, alarm, { clockFormat: '24' }), false);
+  assert.equal(verifyGoal(parseScreen(screens.alarm, 'com.android.deskclock'), alarm.scope, alarm, { clockFormat: '12' }), false);
+  const multiple = screens.sms.replace('</hierarchy>', node('com.android.messaging:id/recipient_number', '01099999999', { package: 'com.android.messaging' }) + '</hierarchy>');
+  assert.equal(verifyGoal(parseScreen(multiple, 'com.android.messaging'), action.scope, action), false);
 });
 test('password, malformed XML and unsupported sensitive UI fail closed before provider/act', async () => {
   let calls = 0; const r = await run('font_size', { initial: 'password', complete: async () => { calls++; return planner(); } });

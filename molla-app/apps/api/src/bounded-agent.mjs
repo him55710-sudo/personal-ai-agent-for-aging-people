@@ -34,6 +34,7 @@ export class BoundedAndroidAgent {
       check(); const screen = await android.screen(binding, check); const view = boundedView(screen, scope);
       const facts = {};
       if (scope.goal === 'font_size' && view.screenType === 'font_size') facts.fontScale = Number((await android.adb(binding, ['shell', 'settings get system font_scale'])).stdout.trim());
+      if (scope.goal === 'alarm') facts.clockFormat = (await android.adb(binding, ['shell', 'settings get system time_12_24'])).stdout.trim();
       const satisfied = verifyGoal(screen, scope, action, facts);
       if (scope.goal === 'sms_draft') facts.exactRecipientAndBodyVisible = satisfied;
       if (scope.goal === 'alarm') facts.exactTimeLabelEnabledOnceVisible = satisfied;
@@ -47,6 +48,7 @@ export class BoundedAndroidAgent {
       for (let i = 0; i < scope.maxSteps; i++) {
         check(); const observed = await observe();
         const entry = { index: i + 1, observed: observed.view, facts: observed.facts, goalVerified: observed.satisfied }; report.steps.push(entry); save();
+        if (scope.goal === 'alarm' && observed.facts.clockFormat !== '24') throw new DomainError('알람 시각을 정확히 확인하려면 지원되는 24시간 표시가 필요해요. 직접 확인해 주세요.', 409);
         if (observed.satisfied) { report.verified = true; report.outcome = 'completed'; break; }
         const available = structuredClone(observed.view);
         if (usedInput) for (const node of available.elements) node.actions = node.actions.filter(a => a !== 'input');
