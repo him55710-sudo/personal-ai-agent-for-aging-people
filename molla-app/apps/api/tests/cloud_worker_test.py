@@ -21,7 +21,7 @@ class RecoveryTests(unittest.TestCase):
         self.cloud._api = lambda *a, **k: self.fail("Must not list or adopt account sessions")
         self.assertEqual(worker.run({"operation": "recover", "phoneId": "saved-mom"})["state"], "stopped")
     def test_only_original_receipt_can_recover(self):
-        def api(method, path):
+        def api(method, path, **kwargs):
             self.calls.append((method, path))
             if path == "/sessions/requests/request-key-123456": return {"id": "session-one", "request_key": "request-key-123456", "cleanup_complete": False}
             return {"id": "session-one", "state": "provisioning", "profile_id": "saved-mom", "expires_at": 9999999999}
@@ -30,20 +30,49 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(result["sessionId"], "session-one")
         self.assertEqual(self.calls, [("GET", "/sessions/requests/request-key-123456"), ("GET", "/sessions/session-one")])
     def test_missing_session_requires_cleanup_evidence(self):
-        def api(method, path):
+        def api(method, path, **kwargs):
             if path == "/sessions/session-one": raise CloudError(404)
             return {"id": "session-one", "request_key": "request-key-123456", "cleanup_complete": False}
         self.cloud._api = api
         self.assertEqual(worker.run({"operation": "stop", "phoneId": "saved-mom", "sessionId": "session-one", "requestId": "request-key-123456"})["state"], "closing")
     def test_released_receipt_without_cleanup_stays_closing(self):
         receipt = {"id": "session-one", "request_key": "request-key-123456", "state": "released", "cleanup_complete": False}
-        self.cloud._api = lambda *a: receipt
+        self.cloud._api = lambda *a, **k: receipt
         request = {"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456"}
         self.assertEqual(worker.run(request)["state"], "closing")
         receipt["cleanup_complete"] = True
         self.assertEqual(worker.run(request)["state"], "stopped")
     def test_other_profile_is_rejected(self):
-        self.cloud._api = lambda *a: {"id": "session-one", "profile_id": "saved-dad", "state": "ready"}
+        self.cloud._api = lambda *a, **k: {"id": "session-one", "profile_id": "saved-dad", "state": "ready"}
         self.assertEqual(worker.run({"operation": "status", "phoneId": "saved-mom", "sessionId": "session-one"})["code"], "session_owner_mismatch")
+    def test_cleanup_recovery_does_not_connect_adb_or_require_catalog(self):
+        def api(method, path, **kwargs):
+            self.assertNotEqual(path, "/me")
+            if "/requests/" in path: return {"id": "session-one", "request_key": "request-key-123456"}
+            return {"id": "session-one", "profile_id": "saved-mom", "state": "ready"}
+        self.cloud._api = api
+        self.cloud._session_record = lambda *a, **k: self.fail("Cleanup must not connect ADB")
+        self.assertEqual(worker.run({"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456", "connect": False})["state"], "ready")
+    def test_released_without_cleanup_confirmation_remains_closing(self):
+        self.cloud._api = lambda *a, **k: {"id": "session-one", "request_key": "request-key-123456", "state": "released", "cleanup_complete": False}
+        self.assertEqual(worker.run({"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456"})["state"], "closing")
+    def test_transient_read_retries_once_but_post_never_retries(self):
+        calls = []
+        def api(method, path, **kwargs):
+            calls.append(method)
+            if len(calls) == 1 or method == "POST": raise OSError("unreachable")
+            return {"ok": True}
+        self.cloud._api = api
+        self.assertTrue(worker.request(self.cloud, "GET", "/me")["ok"])
+        self.assertEqual(calls, ["GET", "GET"])
+        with self.assertRaises(OSError): worker.request(self.cloud, "POST", "/sessions")
+        self.assertEqual(calls, ["GET", "GET", "POST"])
+    def test_auth_failure_is_not_retried(self):
+        def api(method, path, **kwargs):
+            self.calls.append(method)
+            raise CloudError(403)
+        self.cloud._api = api
+        with self.assertRaises(CloudError): worker.request(self.cloud, "GET", "/me")
+        self.assertEqual(self.calls, ["GET"])
 
 if __name__ == "__main__": unittest.main()

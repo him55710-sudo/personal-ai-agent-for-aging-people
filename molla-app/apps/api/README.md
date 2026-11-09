@@ -72,7 +72,9 @@ pnpm test                         # fixtures only, no billing
 python tests/cloud_worker_test.py # receipt/cleanup API fixtures
 ```
 
-Live tests are separate and need explicit authorization. `scripts/verify-live.mjs --android` uses actual model requests and a saved VM, ephemeral private owner state and the mobile HTTP client. It requires `MOLLA_CONFIRM_LIVE_MODEL_CALLS` (1..6), `MOLLA_VERIFY_VM_MINUTES` (1..3), and matching `MOLLA_CONFIRM_VM_MAX_USD`. Keep a cumulative budget across attempts. It opens Kakao if installed, prepares an SMS to a reserved fictional test number, never sends, and requests shutdown in `finally` and a watchdog. The provider's deadline limits the rental even if this process dies. It does not prove APK/IPA rendering or a public HTTPS deployment.
+Live tests are separate and need explicit authorization. `scripts/verify-live.mjs --android` uses actual model requests and a saved VM, ephemeral private owner state and the mobile HTTP client. It requires `MOLLA_CONFIRM_LIVE_MODEL_CALLS` (1..6), `MOLLA_VERIFY_VM_MINUTES` (1..5), and matching `MOLLA_CONFIRM_VM_MAX_USD`. Keep a cumulative budget across attempts. It opens Kakao if installed, prepares an SMS to a reserved fictional test number, never sends, and requests shutdown in `finally` and a watchdog. The provider's deadline limits the rental even if this process dies. It does not prove APK/IPA rendering or a public HTTPS deployment.
+
+Connection recovery retries a transient read at most once (eight-second HTTP timeout per read). Session creation and device effects are never automatically retried. Status/cleanup no longer require a separate catalog lookup, and recovery for shutdown explicitly skips ADB connection. A released receipt without `cleanup_complete` stays `closing`. LLM transport failures are reported as `llm_network_error`, separately from malformed tool output.
 
 See [upgrade verification](../../docs/real-agent-verification.md) for observed results and remaining work. Never copy a fixture result into a live success claim. Installing/login to Kakao and SMS app availability are owner/environment prerequisites.
 

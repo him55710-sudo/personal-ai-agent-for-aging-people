@@ -32,9 +32,10 @@ export class CompatibleProvider {
       if (choice?.finish_reason !== 'tool_calls' || choice.message.refusal || !Array.isArray(calls) || calls.length !== 1 || calls[0].type !== 'function' || typeof calls[0].id !== 'string' || calls[0].id.length > 200) throw new Error('invalid_tool_response');
       return { call: calls[0], model: c.model, provider: c.provider, usage: { inputTokens: result.usage?.prompt_tokens || 0, outputTokens: result.usage?.completion_tokens || 0 } };
     } catch (error) {
+      const network = error instanceof TypeError && /fetch|network/i.test(error.message) || ['ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET'].includes(error.cause?.code);
       const known = { 401: 'LLM 키 인증을 확인해 주세요.', 402: 'LLM 잔액을 확인해 주세요.', 403: '모델 사용 권한을 확인해 주세요.', 429: 'LLM 호출 한도에 도달했어요. 잠시 후 상태를 확인해 주세요.' };
-      const safe = new DomainError(signal?.aborted ? 'AI 응답 시간이 초과되어 중단했어요. 작업은 실행하지 않았어요.' : known[error.providerStatus] || 'AI 서버가 올바른 도구 호출을 반환하지 않았어요. 작업은 실행하지 않았어요.', error.providerStatus === 429 ? 429 : 502);
-      safe.code = error.providerStatus ? 'llm_provider_rejected' : signal?.aborted ? 'llm_timeout' : 'llm_invalid_response'; throw safe;
+      const safe = new DomainError(signal?.aborted ? 'AI 응답 시간이 초과되어 중단했어요. 작업은 실행하지 않았어요.' : known[error.providerStatus] || (network ? 'AI 서버에 연결하지 못했어요. 네트워크 상태를 확인해 주세요. 작업은 실행하지 않았어요.' : 'AI 서버가 올바른 도구 호출을 반환하지 않았어요. 작업은 실행하지 않았어요.'), error.providerStatus === 429 ? 429 : 502);
+      safe.code = error.providerStatus ? 'llm_provider_rejected' : signal?.aborted ? 'llm_timeout' : network ? 'llm_network_error' : 'llm_invalid_response'; throw safe;
     }
   }
 }
