@@ -1,6 +1,8 @@
 import { DomainError } from './core.mjs';
 
 const settings = 'com.android.settings';
+const settingsSearch = 'com.android.settings.intelligence';
+const editable = /EditText|AutoCompleteTextView/;
 const navLabels = /^(Settings|Display|Display & touch|Accessibility|Font size|Display size and text|설정|디스플레이|접근성|글꼴 크기|글씨 크기|디스플레이 크기 및 텍스트)$/i;
 const fontLabel = /^(Font size|글꼴 크기|글씨 크기)$/i;
 const searchIds = new Set(['com.android.settings:id/search_action_bar', 'com.android.settings:id/search', 'com.android.settings:id/search_src_text', 'android:id/search_src_text']);
@@ -15,19 +17,19 @@ export function boundedView(screen, scope) {
   const allowed = scope.allowedApps.includes(screen.package), elements = [];
   let screenType = 'outside_scope';
   if (allowed && scope.goal === 'font_size') {
-    const labels = screen.nodes.filter(n => n.package === settings && navLabels.test(n.label));
-    const isFont = labels.some(n => fontLabel.test(n.label)) && screen.nodes.some(n => /SeekBar/.test(n.className));
+    const labels = screen.nodes.filter(n => n.package === screen.package && navLabels.test(n.label));
+    const isFont = screen.package === settings && labels.some(n => fontLabel.test(n.label)) && screen.nodes.some(n => n.package === settings && /SeekBar/.test(n.className));
     const hasSearch = screen.nodes.some(n => searchIds.has(n.resourceId));
-    const isSearch = screen.nodes.some(n => searchIds.has(n.resourceId) && /EditText/.test(n.className));
+    const isSearch = screen.nodes.some(n => n.package === screen.package && searchIds.has(n.resourceId) && editable.test(n.className));
     if (labels.length || hasSearch) screenType = isFont ? 'font_size' : isSearch ? 'settings_search' : 'settings_navigation';
-    for (const node of screen.nodes.filter(n => n.package === settings && n.enabled)) {
+    for (const node of screen.nodes.filter(n => n.package === screen.package && [settings, settingsSearch].includes(n.package) && n.enabled)) {
       const actions = [];
       const label = navLabels.test(node.label) ? node.label : undefined;
       // Click the exact known preference title, not the center of a broad parent container.
-      if (label && ['android:id/title', 'com.android.settings:id/title'].includes(node.resourceId) && /TextView/.test(node.className)) actions.push('tap');
+      if (label && ['android:id/title', `${screen.package}:id/title`].includes(node.resourceId) && /TextView/.test(node.className)) actions.push('tap');
       if (searchIds.has(node.resourceId)) {
-        if (node.clickable) actions.push('tap');
-        if (/EditText/.test(node.className) && node.focused && !node.label.trim()) actions.push('input');
+        if (node.clickable && !(editable.test(node.className) && node.focused)) actions.push('tap');
+        if (editable.test(node.className) && node.focused && (!node.label.trim() || node.hint && node.label === node.hint)) actions.push('input');
       }
       if (screenType !== 'outside_scope' && node.scrollable && listIds.has(node.resourceId)) actions.push('scroll_up', 'scroll_down');
       if (actions.length) elements.push({ id: node.id, label: label || (searchIds.has(node.resourceId) ? 'Settings search' : 'Settings list'), actions });

@@ -25,7 +25,7 @@ export function parseScreen(xml, foreground) {
       // Accessibility hints are not part of the visible field value. Keep them in the
       // screen identity and sensitivity checks without corrupting exact-value verification.
       const label = (text.trim() ? text : contentDescription).trim();
-      if (sensitive.test(`${text} ${contentDescription}`) && (/EditText|Button/.test(value.class || '') || value['resource-id'].endsWith('/title'))) throw new DomainError('로그인·인증·결제 화면은 주인이 직접 진행해 주세요.', 403);
+      if (sensitive.test(`${text} ${contentDescription} ${value.hint || ''}`) && (/EditText|AutoCompleteTextView|Button/.test(value.class || '') || value['resource-id'].endsWith('/title'))) throw new DomainError('로그인·인증·결제 화면은 주인이 직접 진행해 주세요.', 403);
       const bounds = /^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$/.exec(value.bounds || '')?.slice(1).map(Number);
       if (bounds && bounds.every(n => n <= 8192) && bounds[2] > bounds[0] && bounds[3] > bounds[1]) {
         const resourceId = value['resource-id'], actions = [];
@@ -35,7 +35,7 @@ export function parseScreen(xml, foreground) {
           if (listIds.has(resourceId) && value.scrollable === 'true') actions.push('scroll_up', 'scroll_down');
         }
         nodes.push({ id: digest(JSON.stringify([nodes.length, resourceId, bounds, text, contentDescription])).slice(0, 20), resourceId, label: label.slice(0, 1100), contentDescription: contentDescription.slice(0, 1100), bounds, actions, package: value.package,
-          className: value.class || '', enabled: value.enabled === 'true', clickable: value.clickable === 'true', focused: value.focused === 'true', scrollable: value.scrollable === 'true', checked: value.checked === 'true' });
+          hint: String(value.hint || '').slice(0, 1100), className: value.class || '', enabled: value.enabled === 'true', clickable: value.clickable === 'true', focused: value.focused === 'true', scrollable: value.scrollable === 'true', checked: value.checked === 'true' });
       }
     }
     for (const [key, child] of Object.entries(value)) if (key === 'node' || key === 'hierarchy') walk(child);

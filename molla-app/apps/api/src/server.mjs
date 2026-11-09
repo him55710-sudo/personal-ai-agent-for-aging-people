@@ -13,6 +13,7 @@ import { BoundedAndroidAgent } from './bounded-agent.mjs';
 import { CloudVMManager, cloudMappings, phoneRuntime, runtimePhoneEnv, vmLimits } from '../../../server/cloud-vm.mjs';
 import { PhoneScreenService } from '../../../server/phone-screen.mjs';
 import { FamilyLinks } from './family.mjs';
+import { inspectAndroidCapabilities } from './android-capabilities.mjs';
 
 const loopback = ip => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(ip);
 export function publicTask(task) {
@@ -178,6 +179,12 @@ export function createApi({ env = process.env, provider, cloudCall, runner, data
         if (path === '/state') return send(res, 200, { ...snapshot(s, me.id), familyLinks: families.list(me.id), tasks: s.tasks.map(publicTask), mode: 'live' });
         if (path === '/recent') { const tasks = s.tasks.filter(t => t.owner === me.id); const active = tasks.filter(t => ['awaiting_approval', 'approved', 'executing', 'verifying', 'running'].includes(t.status)); return send(res, 200, { me, messages: s.messages.filter(m => m.owner === me.id).slice(-10), contacts: s.contacts.filter(c => c.owner === me.id), tasks: [...new Map([...active, ...tasks.slice(0, 8)].map(t => [t.id, t])).values()].map(publicTask), mode: 'live' }); }
         if (path === '/phone/screen') return send(res, 200, await svc.screen.capture(me.id, guard));
+        if (path === '/phone/capabilities') {
+          const check = () => { guard(); new PolicyEngine(store.read()).request(me.id, me.id, 'phone'); };
+          check();
+          const android = new AndroidExecutor(me.id, { getEnv: () => runtimePhoneEnv(store.read(), env), ...(runner ? { runner } : {}) });
+          return send(res, 200, await inspectAndroidCapabilities(android, check));
+        }
         throw new DomainError('찾을 수 없어요.', 404);
       }
       if (req.method !== 'POST') throw new DomainError('지원하지 않는 요청 방식이에요.', 405);
