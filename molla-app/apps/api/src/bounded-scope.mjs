@@ -41,6 +41,20 @@ export function prepareAgentTask(s, actor, args, env) {
   enableLifecycle(s, task); s.tasks.unshift(task); return task;
 }
 
-export const stepSchema = object({ operation: choice(['open', 'tap', 'scroll_up', 'scroll_down', 'input', 'back', 'font_set', 'compose', 'set_alarm', 'finish', 'ask']), elementId: { type: 'string', maxLength: 100 }, reason: string(200) });
-export const validateStep = ajv.compile(stepSchema);
-export const stepTools = [{ type: 'function', function: { name: 'android_step', description: 'Choose one offered operation and current elementId. No coordinates, shell, new text or goal changes. Reason is a short action description, not private reasoning. ask stops for fresh owner review; finish cannot assert success.', strict: true, parameters: stepSchema } }];
+// Each global operation has no element argument; element operations enumerate this observation only.
+export function toolsForView(view) {
+  const ops = [...new Set([...view.operations, ...view.elements.flatMap(n => n.actions)])];
+  return ops.map(operation => {
+    const ids = view.elements.filter(n => n.actions.includes(operation)).map(n => n.id);
+    const properties = { reason: string(200), ...(ids.length ? { elementId: { type: 'string', enum: ids } } : {}) };
+    return { type: 'function', function: { name: `android_${operation}`, strict: true,
+      description: `${operation}: ${['open', 'compose', 'set_alarm'].includes(operation) ? 'Launch the approved app using fixed owner-approved values; allowed even when current package is outside_scope.' : 'Use only this offered operation.'} No shell, coordinates, new text or goal changes.`, parameters: object(properties) } };
+  });
+}
+export function decodeViewStep(call, tools) {
+  const offered = tools.find(t => t.function.name === call?.function?.name);
+  if (!offered) throw new DomainError('허용되지 않은 도구 요청이에요.', 502);
+  let args; try { args = JSON.parse(call.function.arguments); } catch { throw new DomainError('AI 동작을 해석할 수 없어요.', 502); }
+  if (!ajv.validate(offered.function.parameters, args)) throw new DomainError('현재 화면에 허용된 대상이 없어요. 다시 확인해 주세요.', 409);
+  return { operation: offered.function.name.slice('android_'.length), elementId: args.elementId || '', reason: args.reason };
+}

@@ -11,11 +11,14 @@
   <link rel="stylesheet" href="/person-profile.css">
   <link rel="stylesheet" href="/trust-panel.css">
   <script type="module" src="/app.mjs"></script>
+  <link rel="stylesheet" href="/owner.css">
+  <script type="module" src="/owner.mjs"></script>
 </head>
 <body>
   <header class="titlebar">
     <div class="brand"><span class="talk-logo" aria-hidden="true">TALK</span><strong>카카오톡</strong><span class="prototype">발표용 데모</span></div>
     <div class="presentation">
+      <button id="owner-open" class="guide-button" type="button">내 Android · 실제 도움</button>
       <span id="api-mode" class="api-mode" aria-live="polite">연결 확인 중</span>
       <button id="guide" type="button" class="guide-button">시연 안내</button>
       <label class="role-picker"><span class="role-label">보는 사람</span><select id="persona" aria-label="보는 사람"></select></label>
@@ -27,6 +30,7 @@
     <section id="chat" class="chat" aria-label="채팅방"></section>
   </main>
   <dialog id="dialog" aria-labelledby="modal-title"></dialog>
+  <dialog id="owner-dialog" aria-labelledby="owner-title"><div class="owner-head"><div><strong id="owner-title">치즈와 실제 도움</strong><p id="owner-name">주인 연결이 필요해요</p></div><button id="owner-close" type="button" aria-label="실제 도움 닫기">닫기</button></div><div id="owner-content"></div><p id="owner-error" role="alert"></p></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
 </body>
 </html>

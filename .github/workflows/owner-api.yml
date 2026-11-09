@@ -29,3 +29,5 @@ jobs:
         working-directory: molla-app
       - run: node --test tests/*.test.mjs
         working-directory: molla-app
+      - run: node --test
+        working-directory: fa-kakao-demo

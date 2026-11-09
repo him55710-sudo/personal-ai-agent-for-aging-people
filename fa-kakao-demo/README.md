@@ -99,3 +99,15 @@ flowchart LR
 
 - `npm test`는 일반 답변과 입력 양식, 사람마다 전용 공간이 분리되는지, 보기 허락, 건별 승인, 지난 카드를 다시 못 쓰게 막는지, 누구에게 보이는지를 확인한다.
 - REA 4.1.0으로 격리한 Chrome에서 공개 도움말의 DOM과 접근성 정보를 확인하고, 공식 화면을 참고해 모바일과 PC 흐름을 재현했다. [REA](https://github.com/morluto/rea) · [그룹 채팅](https://talktips.kakao.com/easyread/content/50) · [챗봇 추가](https://talktips.kakao.com/content/84) · [채팅방 나가기](https://talktips.kakao.com/easyread/content/55) · [Pickle 로그인 카드](https://pickle.com/help/connect/save-login)
+
+## 같은 4173 화면에서 실제 Android 실행
+
+상단 **내 Android · 실제 도움**은 인증된 owner API(`127.0.0.1:4319`)에 연결합니다. 기존 채팅 목업의 보는 사람 선택은 실제 권한을 부여하지 않습니다. 주인 키를 입력한 뒤 도움·AI·Android 동의를 각각 수락하고, 비용 견적을 확인한 후 VM을 시작합니다. 요청으로 생성된 작업은 고정된 목표/앱/동작/예산을 확인하고 별도로 승인해야 실행됩니다. 문자 전송 도구는 없습니다.
+
+- 키·개인 채팅·실제 화면은 localStorage에 저장하지 않습니다. 개인 실행 패널은 같은 카카오 UI 안에서 열립니다.
+- VM 종료와 작업 중단은 다른 요청이 진행 중이어도 사용할 수 있습니다. 연결 해제 자체는 VM 종료가 아닙니다.
+- AI 사용료는 VM 견적과 별개입니다. 자동 VM 시작이나 유료 테스트는 없습니다.
+- 서버에서만 `MOLLA_OWNER_API_URL`을 변경할 수 있으며 HTTP loopback 주소만 허용합니다. owner API를 별도로 실행해야 합니다.
+- 키 발급/동의/클라우드 설정은 `molla-app/apps/api/README.md`를 참고하세요. 키는 가족 채팅에 넣지 마세요.
+
+무료 검증: `pnpm test`. 화면 검증: `pnpm install --frozen-lockfile`, `pnpm exec playwright install chromium`, `pnpm verify:owner-ui`. Windows Edge 사용 시 `BROWSER_CHANNEL=msedge`를 설정할 수 있습니다. 화면 검증은 가상 응답만 사용하며 `.output/owner-fixture-*.png`를 남깁니다. 실제 VM 성공 증거가 아닙니다.
