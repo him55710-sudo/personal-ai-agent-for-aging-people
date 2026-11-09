@@ -1,6 +1,6 @@
 # Real agent upgrade verification
 
-Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, synchronized with main `23572ff` before the PR, and merged main `78eb74a` for the connection repair follow-up. Verification date: 2026-11-09.
+The connection repair from `feat/real-agent-mobile-vm` is integrated on main through [PR #24](https://github.com/him55710-sudo/personal-ai-agent-for-aging-people/pull/24); duplicate PR #18 is closed. The final checks below were repeated against main `169e405` on 2026-11-09. This does not change the separate live Android release gates.
 
 ## Implemented
 
@@ -17,15 +17,15 @@ Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, syn
 | Suite | Observed result |
 | --- | --- |
 | New owner API, tool adapter, Android evidence and mobile HTTP integration | 18/18 pass |
-| Python Phone Harness receipt/recovery adapter | 8/8 pass |
-| Existing server/policy/phone/screen tests | 69/69 pass after latest main merge |
+| Python Phone Harness receipt/recovery adapter | 9/9 pass |
+| Existing server/policy/phone/screen tests | 71/71 pass |
 | Mobile TypeScript | pass |
 | Mobile HTTP runtime | 5/5 pass |
 | React Native Web UI flows | 9 checks pass; mocked API, not live provider evidence |
 | Mobile web export | pass |
-| `fa-kakao-demo` at initial base `23572ff` | 27/27 pass |
-| `fa-engine` | 26/26 pass |
-| `fa-trust` at initial base `23572ff` | 52/52 pass (`node --import tsx --test test/*.test.ts`) |
+| `fa-kakao-demo` | 34/34 pass |
+| `fa-engine` including family ontology/privacy | 41/41 pass |
+| `fa-trust` | 64/64 pass (`node --import tsx --test test/*.test.ts`) |
 | Standalone CLI on Windows | 23/25 pass, same two baseline failures: POSIX mode assertion and Windows symlink creation permission |
 | Linux GitHub Actions | pass: original CLI suite, new API, Python adapter, existing server, mobile TypeScript and HTTP runtime |
 
