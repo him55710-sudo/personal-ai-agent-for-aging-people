@@ -36,7 +36,7 @@ export function LiveControls() {
       <Button label="내 연락처에 저장" busy={busy} disabled={!contact.name.trim() || !contact.phone.trim()} onPress={() => void saveContact()} />
       <Button label="취소" variant="quiet" disabled={busy} onPress={() => setShowContact(false)} />
     </View> : <View style={{ marginTop: 16 }}><Button label="연락처 추가하기" variant="quiet" onPress={() => setShowContact(true)} /></View>}
-    <View style={{ marginTop: 32, gap: 12 }}><Button label="몰라의 도움 중단하기" variant="danger" disabled={busy} onPress={() => setConfirmPause(true)} /><Button label="이 기기 연결 해제" variant="quiet" disabled={busy} onPress={() => setConfirmDisconnect(true)} /></View>
+    <View style={{ marginTop: 32, gap: 12 }}><Button label="치즈의 도움 중단하기" variant="danger" disabled={busy} onPress={() => setConfirmPause(true)} /><Button label="이 기기 연결 해제" variant="quiet" disabled={busy} onPress={() => setConfirmDisconnect(true)} /></View>
     <Modal visible={!!quote} transparent animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={() => { if (!busy) cancelVmStart(); }}>
       <View style={[styles.modal, { backgroundColor: colors.scrim }]}><View accessibilityViewIsModal style={[styles.dialog, { backgroundColor: colors.surface }]}>
         <Copy variant="title" accessibilityRole="header">내 Android를 시작할까요?</Copy>
@@ -54,7 +54,7 @@ export function LiveControls() {
     </Modal>
     <Modal visible={confirmPause} transparent animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={() => { if (!busy) setConfirmPause(false); }}>
       <View style={[styles.modal, { backgroundColor: colors.scrim }]}><View accessibilityViewIsModal style={[styles.dialog, { backgroundColor: colors.surface }]}>
-        <Copy variant="title">몰라의 도움을 중단할까요?</Copy><Copy muted style={{ marginVertical: 20 }}>대기 중인 부탁과 기억 공유를 철회하고 Android 종료를 요청해요. 이미 진행된 외부 작업은 기기에서 확인해 주세요.</Copy>
+        <Copy variant="title">치즈의 도움을 중단할까요?</Copy><Copy muted style={{ marginVertical: 20 }}>대기 중인 부탁과 기억 공유를 철회하고 Android 종료를 요청해요. 이미 진행된 외부 작업은 기기에서 확인해 주세요.</Copy>
         <Button label="계속 함께하기" disabled={busy} onPress={() => setConfirmPause(false)} /><View style={{ height: 12 }} /><Button label="도움 중단하기" variant="danger" busy={busy} onPress={() => void setConsent(false)} />
       </View></View>
     </Modal>

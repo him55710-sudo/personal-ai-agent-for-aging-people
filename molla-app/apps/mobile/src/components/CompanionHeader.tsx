@@ -10,25 +10,26 @@ const destinations = [
   { route: 'Chat', label: '대화', icon: MessageCircle },
   { route: 'Home', label: '둘러보기', icon: Compass },
   { route: 'Tasks', label: '부탁한 일', icon: ListChecks },
-  { route: 'Profile', label: '나의 몰라', icon: UserRound },
+  { route: 'Profile', label: '나의 치즈', icon: UserRound },
 ] as const;
 
-export function CompanionHeader({ name = '몰라', onNavigate, right }: { name?: string; onNavigate: (route: keyof TabParams) => void; right?: React.ReactNode }) {
+export function CompanionHeader({ name, onNavigate, right }: { name?: string; onNavigate: (route: keyof TabParams) => void; right?: React.ReactNode }) {
   const { colors, reducedMotion } = useTheme();
   const inset = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [open, setOpen] = useState(false);
+  const displayName = !name?.trim() || /^(몰라|molla)$/i.test(name.trim()) ? '치즈' : name;
   return <>
     <View style={[styles.header, { paddingTop: inset.top + 8 }]}>
       <View style={[styles.round, { backgroundColor: colors.quiet }]}><IconButton icon={Menu} label="메뉴 열기" onPress={() => setOpen(true)} /></View>
-      <View style={styles.identity}><Companion size={64} decorative /><Copy variant="action" style={styles.name}>{name}</Copy></View>
-      {right || <IconButton icon={UserRound} label="나의 몰라 열기" onPress={() => onNavigate('Profile')} />}
+      <View style={styles.identity}><Companion size={64} decorative /><Copy variant="action" style={styles.name}>{displayName}</Copy></View>
+      {right || <IconButton icon={UserRound} label="나의 치즈 열기" onPress={() => onNavigate('Profile')} />}
     </View>
     <Modal visible={open} transparent animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={() => setOpen(false)}>
       <View style={[styles.overlay, { backgroundColor: colors.scrim }]}>
         <Pressable style={StyleSheet.absoluteFill} accessibilityRole="button" accessibilityLabel="메뉴 닫기" onPress={() => setOpen(false)} />
         <View accessibilityViewIsModal style={[styles.drawer, { width: Math.min(width - 48, 340), paddingTop: inset.top + 20, backgroundColor: colors.canvas }]}>
-          <View style={styles.drawerTitle}><Copy variant="title">{name}</Copy><IconButton icon={X} label="메뉴 닫기" onPress={() => setOpen(false)} /></View>
+          <View style={styles.drawerTitle}><Copy variant="title">{displayName}</Copy><IconButton icon={X} label="메뉴 닫기" onPress={() => setOpen(false)} /></View>
           {destinations.map(({ route, label, icon: Icon }) => <Pressable key={route} accessibilityRole="button" onPress={() => { feedback(); setOpen(false); onNavigate(route); }} style={({ pressed }) => [styles.destination, { backgroundColor: pressed ? colors.quiet : 'transparent' }]}><Icon size={24} color={colors.ink} strokeWidth={1.8} /><Copy variant="action">{label}</Copy></Pressable>)}
         </View>
       </View>

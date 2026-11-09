@@ -63,7 +63,7 @@ export function LiveCompanionProvider({ children }: { children: React.ReactNode 
     try {
       const [next, nextRuntime] = await Promise.all([apiRequest<LiveSnapshot>(auth, '/state'), apiRequest<RuntimeStatus>(auth, '/runtime')]);
       if (generation.current !== currentGeneration || sequence.current !== current) return;
-      if (!acceptRuntime(nextRuntime, auth.baseUrl) || !next.me?.id || nextRuntime.me.id !== next.me.id) throw new ApiError('실제 모드로 설정된 내 몰라 서버에 연결해 주세요.', 409);
+      if (!acceptRuntime(nextRuntime, auth.baseUrl) || !next.me?.id || nextRuntime.me.id !== next.me.id) throw new ApiError('실제 모드로 설정된 내 치즈 서버에 연결해 주세요.', 409);
       setData(next); setRuntime(nextRuntime); setConnected(true); setError('');
     } catch (cause) {
       if (generation.current === currentGeneration && sequence.current === current) { setConnected(false); handleError(cause); }
@@ -102,7 +102,7 @@ export function LiveCompanionProvider({ children }: { children: React.ReactNode 
   async function perform(work: (auth: Credentials) => Promise<void>) {
     if (operation.current) return false;
     const auth = credentials.current;
-    if (!auth) { setError('내 몰라를 먼저 연결해 주세요.'); return false; }
+    if (!auth) { setError('내 치즈를 먼저 연결해 주세요.'); return false; }
     operation.current = true; setBusy(true); setError(''); setNotice(''); sequence.current++;
     const started = generation.current;
     try { await work(auth); if (started !== generation.current) return false; await refresh(); return true; }
@@ -136,7 +136,7 @@ export function LiveCompanionProvider({ children }: { children: React.ReactNode 
   const setPhonePermission = (enabled: boolean) => perform(async auth => {
     const scopes = (data.me.scopes || []).filter(scope => scope !== 'phone');
     if (enabled) scopes.push('phone');
-    await mutate(auth, '/preferences', { agentName: data.me.agentName || '몰라', scopes });
+    await mutate(auth, '/preferences', { agentName: data.me.agentName || '치즈', scopes });
   });
   const setConsent = (active: boolean) => perform(async auth => { await mutate(auth, '/consent', { value: active ? 'active' : 'revoked' }); });
   const addContact = (input: Omit<Contact, 'id'>) => perform(async auth => { await mutate(auth, '/contacts', input); });
@@ -168,7 +168,7 @@ export function LiveCompanionProvider({ children }: { children: React.ReactNode 
   });
   const readPhoneFrame = useCallback(async (signal: AbortSignal) => {
     const auth = credentials.current, started = generation.current;
-    if (!auth) throw new ApiError('내 몰라를 먼저 연결해 주세요.', 401);
+    if (!auth) throw new ApiError('내 치즈를 먼저 연결해 주세요.', 401);
     try {
       const frame = await apiRequest<PhoneFrame>(auth, '/phone/screen', undefined, { signal, timeoutMs: 18000 });
       if (started !== generation.current || signal.aborted) throw new ApiError('화면 보기가 종료되었어요.');

@@ -1,4 +1,4 @@
-# Molla mobile — actual API connection
+# Cheese mobile — actual API connection
 
 An actual React Native application for iOS and Android, built with Expo SDK 58. It does not embed the existing website in a WebView. The web target exists for convenient visual review.
 

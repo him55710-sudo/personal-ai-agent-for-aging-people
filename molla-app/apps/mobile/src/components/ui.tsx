@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Animated, Image, Platform, Pressable, StyleSheet, Text, View, type StyleProp, type TextProps, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ArrowRight, RotateCcw } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
@@ -28,7 +28,7 @@ export function Button({ label, onPress, icon: Icon, busy = false, disabled = fa
   </Pressable>;
 }
 export function Companion({ size = 220, animate = false, decorative = false }: { size?: number; animate?: boolean; decorative?: boolean }) {
-  const { reducedMotion, colors } = useTheme();
+  const { reducedMotion } = useTheme();
   const entrance = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     if (!animate || reducedMotion) { entrance.setValue(1); return; }
@@ -36,14 +36,8 @@ export function Companion({ size = 220, animate = false, decorative = false }: {
     const animation = Animated.spring(entrance, { toValue: 1, ...motion.spring, useNativeDriver: Platform.OS !== 'web' });
     animation.start(); return () => animation.stop();
   }, [animate, reducedMotion, entrance]);
-  return <Animated.View aria-hidden={decorative} accessible={!decorative} accessibilityRole="image" accessibilityLabel="노란 말풍선 친구, 몰라" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }], opacity: entrance }}>
-    <View style={{ position: 'absolute', width: size * .23, height: size * .22, left: size * .2, bottom: size * .12, backgroundColor: colors.accent, borderBottomLeftRadius: size * .06, transform: [{ rotate: '12deg' }] }} />
-    <View style={{ width: size * .86, height: size * .7, borderRadius: size * .29, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] }}>
-      <View style={{ flexDirection: 'row', gap: size * .14, marginTop: size * .01 }}>
-        {[0, 1].map(eye => <View key={eye} style={{ width: size * .08, height: size * .13, borderRadius: size * .04, backgroundColor: '#181818' }} />)}
-      </View>
-      <View style={{ width: size * .12, height: size * .055, borderBottomWidth: Math.max(1.4, size * .025), borderBottomColor: '#181818', borderRadius: size * .06, marginTop: size * .035 }} />
-    </View>
+  return <Animated.View aria-hidden={decorative} accessible={!decorative} accessibilityRole="image" accessibilityLabel={decorative ? undefined : '치즈 캐릭터'} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }], opacity: entrance }}>
+    <Image accessible={false} source={require('../../assets/cheese.png')} resizeMode="contain" style={{ width: size, height: size }} />
   </Animated.View>;
 }
 export function ErrorNotice({ message, retry }: { message: string; retry?: () => void }) {

@@ -24,7 +24,7 @@ export function FamilyControls() {
         <Button label="연결 거절하기" variant="quiet" disabled={busy} onPress={() => void decideFamily(link.id, false)} />
       </> : <Button label={`${link.name}의 요청 권한 철회`} variant="danger" disabled={busy} onPress={() => void decideFamily(link.id, false)} /> : link.state === 'active' ? <>
         <TextInput accessibilityLabel="가족에게 보낼 부탁" placeholder="예: 내일 늦는다고 문자 써 줘" placeholderTextColor={colors.muted} value={text} onChangeText={setText} multiline maxLength={1000} style={inputStyle} />
-        <Button label="가족의 몰라에게 부탁 보내기" disabled={busy || !text.trim()} onPress={() => void requestFamily(link.id, text.trim()).then(ok => { if (ok) setText(''); })} />
+        <Button label="가족의 치즈에게 부탁 보내기" disabled={busy || !text.trim()} onPress={() => void requestFamily(link.id, text.trim()).then(ok => { if (ok) setText(''); })} />
       </> : <Copy muted>가족 본인의 허용을 기다리고 있어요.</Copy>}
     </View>)}
   </View>;
