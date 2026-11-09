@@ -15,7 +15,7 @@ await page.route('**/api/owner/**',async route=>{
  const req=route.request(), path=new URL(req.url()).pathname.replace('/api/owner',''), body=req.postDataJSON();calls.push({path,body});
  assert.equal(req.headers().authorization,'Bearer '+token);
  if(path==='/chat')await new Promise(r=>slowRelease=r);
- const data=path==='/state'?state:path==='/runtime'?{llm:{model:'fixture only',ready:true,consented:true},phone:{state:'fixture'}}:path==='/phone/quote'?{quoteId:'fixture-quote',durationMinutes:3,estimatedMaxUsd:.15}:path==='/phone/screen'?{dataUrl:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR4cAAAAASUVORK5CYII=',capturedAt:new Date().toISOString()}:{};
+ const data=path==='/recent'?state:path==='/runtime'?{llm:{model:'fixture only',ready:true,consented:true},phone:{state:'fixture'}}:path==='/phone/quote'?{quoteId:'fixture-quote',durationMinutes:3,estimatedMaxUsd:.15}:path==='/phone/screen'?{dataUrl:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR4cAAAAASUVORK5CYII=',capturedAt:new Date().toISOString()}:{};
  await route.fulfill({json:data});
 });
 try{

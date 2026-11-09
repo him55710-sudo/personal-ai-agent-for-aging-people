@@ -176,6 +176,7 @@ export function createApi({ env = process.env, provider, cloudCall, runner, data
         const s = store.read(), me = member(s, identity.actor), llm = modelStatus(env);
         if (path === '/runtime') return send(res, 200, { mode: 'live', me: { id: me.id, name: me.name }, llm: { ...llm, consented: me.cloudAI.enabled, includeMemories: me.cloudAI.includeMemories, ready: !!(llm.enabled && llm.configured && me.consent === 'active' && me.cloudAI.enabled) }, phone: visiblePhone(s, me.id, env), limits: vmLimits(env), automaticSending: false });
         if (path === '/state') return send(res, 200, { ...snapshot(s, me.id), familyLinks: families.list(me.id), tasks: s.tasks.map(publicTask), mode: 'live' });
+        if (path === '/recent') { const tasks = s.tasks.filter(t => t.owner === me.id); const active = tasks.filter(t => ['awaiting_approval', 'approved', 'executing', 'verifying', 'running'].includes(t.status)); return send(res, 200, { me, messages: s.messages.filter(m => m.owner === me.id).slice(-10), contacts: s.contacts.filter(c => c.owner === me.id), tasks: [...new Map([...active, ...tasks.slice(0, 8)].map(t => [t.id, t])).values()].map(publicTask), mode: 'live' }); }
         if (path === '/phone/screen') return send(res, 200, await svc.screen.capture(me.id, guard));
         throw new DomainError('찾을 수 없어요.', 404);
       }

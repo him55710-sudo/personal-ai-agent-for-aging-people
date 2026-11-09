@@ -141,3 +141,9 @@ test('Settings root search launcher is navigation, not an editable search screen
   assert(view.elements.some(n=>n.actions.includes('scroll_down')));
   assert(!view.elements.some(n=>n.actions.includes('input')));
 });
+
+test('verified post-action observation is reused for next planning while pre-action recheck remains', async () => {
+ const r=await run('font_size'); assert(r.evidence.verified);
+ // Three actions require 7 observations: initial, each pre-action and each post-action.
+ assert.equal(r.android.commands.filter(c=>c==='dumpsys activity activities').length,14);
+});

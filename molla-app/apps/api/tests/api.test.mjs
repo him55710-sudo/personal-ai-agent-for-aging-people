@@ -223,3 +223,16 @@ test('family linking needs parent acceptance; helper receives receipts only, can
   await f.request('mom', '/consent', { value: 'revoked' }); await f.request('mom', '/consent', { value: 'active' });
   assert.equal((await f.request('son', '/family/request', { connectionId: nextLink.id, text: '철회된 요청', requestId: randomUUID() })).status, 403);
 });
+
+test('recent response limits history but retains active work outside recent list', async t => {
+ const f = await fixture(t); const store=f.app.tenants.get({actor:'mom',name:'mom'});
+ store.transaction(s => { s.messages = Array.from({length: 50}, (_,i)=>({id:String(i), owner:'mom', role:'user', text:String(i)})); s.tasks = Array.from({length: 20}, (_,i)=>({id:String(i),owner:'mom',status:i===19?'executing':'completed',action:{type:'fixture',body:'test'}})); });
+ const r=await f.request('mom','/recent'); assert.equal(r.status,200); assert.equal(r.body.messages.length,10); assert.equal(r.body.messages[0].text,'40'); assert.equal(r.body.tasks.length,9); assert(r.body.tasks.some(t=>t.id==='19')); assert.equal((await f.request('dad','/recent')).body.tasks.length,0);
+ assert.equal((await f.request('mom','/state')).body.messages.length,50);
+});
+test('legacy rate events migrate once into a persistent indexed table', async t => {
+ const f=await fixture(t,{env:{MOLLA_RATE_PER_MINUTE:'2'}}), store=f.app.tenants.get({actor:'mom',name:'mom'});
+ store.transaction(s=>{s.rate=[Date.now()];});
+ assert.equal((await f.request('mom','/runtime')).status,200); assert.equal((await f.request('mom','/runtime')).status,429);
+ await f.restart(); assert.equal((await f.request('mom','/runtime')).status,429);
+});

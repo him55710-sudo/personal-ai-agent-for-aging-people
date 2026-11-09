@@ -15,7 +15,7 @@ export class BoundedAndroidAgent {
   async execute(action, hooks) {
     const scope = structuredClone(action.scope), started = this.now(), controller = new AbortController();
     const report = { version: 1, source: 'android-ui-hierarchy', goal: scope.goal, scopeHash: digest(JSON.stringify(scope)), startedAt: new Date(started).toISOString(), steps: [], usage: { inputTokens: 0, outputTokens: 0, reservedTokens: 0 }, outcome: 'running', verified: false };
-    let effects = 0, stale = 0, usedInput = false, irreversible = false;
+    let effects = 0, stale = 0, usedInput = false, irreversible = false, lastObserved = null;
     const save = () => { report.elapsedMs = this.now() - started; this.record(structuredClone(report)); };
     const check = () => {
       hooks.authorize();
@@ -46,7 +46,7 @@ export class BoundedAndroidAgent {
     try {
       if (scope.version !== 1 || JSON.stringify(scope.allowedApps) !== JSON.stringify(profileApps[scope.goal]) || JSON.stringify(scope.allowedActions) !== JSON.stringify(profileOperations[scope.goal])) throw new DomainError('지원되지 않는 승인 범위예요. 새로 승인해 주세요.', 409);
       for (let i = 0; i < scope.maxSteps; i++) {
-        check(); const observed = await observe();
+        check(); const observed = lastObserved || await observe(); lastObserved = null;
         const entry = { index: i + 1, observed: observed.view, facts: observed.facts, goalVerified: observed.satisfied }; report.steps.push(entry); save();
         if (observed.satisfied) { report.verified = true; report.outcome = 'completed'; break; }
         const available = structuredClone(observed.view);
@@ -78,7 +78,7 @@ export class BoundedAndroidAgent {
         if (fresh.screen.screenHash !== observed.screen.screenHash) {
           entry.result = 'stale_reobserved_no_action'; save();
           if (++stale > 1) throw new DomainError('화면이 반복해서 바뀌었어요. 직접 확인해 주세요.', 409);
-          continue;
+          lastObserved = fresh; continue;
         }
         const node = fresh.screen.nodes.find(n => n.id === step.elementId); let command;
         if (elementAction) {
@@ -108,6 +108,7 @@ export class BoundedAndroidAgent {
         if (after.satisfied) { report.verified = true; report.outcome = 'completed'; break; }
         if (irreversible || entry.result === 'unverified') throw new DomainError('동작 후 목표 결과를 확인하지 못했어요. 자동 재실행하지 않아요.', 409);
         if (!scope.allowedApps.includes(after.screen.package)) throw new DomainError('승인 앱을 벗어났어요. 새 승인이 필요해요.', 409);
+        lastObserved = after;
       }
       if (!report.verified) throw new DomainError('최대 단계 수에 도달했어요. 새 승인이 필요해요.', 409);
     } catch (error) {
