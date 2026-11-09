@@ -55,7 +55,7 @@ function assertFact(e, { key, p, o, label, audience, kind, sharedWith = [], vers
     validFrom: new Date(e.ts).toISOString(),
   };
   facts.set(f.id, f);
-  remember(N(owner), `${polish(`${label}`)} — ${labelOf(p)}${f.requester !== owner ? ` (요청: ${N(f.requester)})` : ''}`);
+  remember(N(owner), `${labelOf(p)} (${f.source.event})`);
   return f;
 }
 
@@ -66,7 +66,12 @@ function supersede(key) {
 }
 
 function redactKey(key) {
-  for (const f of facts.values()) if (f.key === key) f.sources.forEach(redact);
+  for (const f of facts.values()) {
+    if (f.key !== key) continue;
+    f.sources.forEach(redact);
+    f.label = null;
+    f.o = null;
+  }
 }
 
 const labelOf = (p) => ({
@@ -142,7 +147,7 @@ function project(e) {
       logDecision(`${p.source === 'molla' ? '[Molla] ' : ''}${N(e.actor)} ${p.vote} → ${p.requestId} → ${p.state}`);
       return;
     case 'fa:TaskPrepared':
-      remember(N(e.onBehalfOf), `[Molla] ${p.text ?? p.taskId} → 초안 준비 (요청: ${N(e.actor)})`);
+      remember(N(e.onBehalfOf), `[Molla] 초안 준비 (${e.id})`);
       return;
     case 'fa:ConsentChanged':
       logDecision(`[Molla] ${N(e.actor)} consent → ${p.value}`);
