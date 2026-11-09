@@ -76,7 +76,7 @@ export class CloudVMManager {
  });}
  async stopUnrestricted(actor){
   const s=this.load(),b=this.assigned(actor),session=s.cloudSessions?.[actor];
-  if(!session?.sessionId||session.phoneId!==b.phoneId){const recovered=await this.call({operation:'recover',phoneId:b.phoneId,requestId:session?.requestId},{env:this.env});this.record(actor,b.phoneId,recovered);if(recovered.state==='stopped')return phoneRuntime(this.load(),actor,this.env);}
+  if(!session?.sessionId||session.phoneId!==b.phoneId){const recovered=await this.call({operation:'recover',phoneId:b.phoneId,requestId:session?.requestId,connect:false},{env:this.env});this.record(actor,b.phoneId,recovered);if(recovered.state==='stopped')return phoneRuntime(this.load(),actor,this.env);}
   const current=this.load().cloudSessions[actor];const data=await this.call({operation:'stop',phoneId:b.phoneId,sessionId:current.sessionId,requestId:current.requestId},{env:this.env});this.record(actor,b.phoneId,data);return phoneRuntime(this.load(),actor,this.env);
  }
  async stop(actor){return this.locked(actor,()=>this.stopUnrestricted(actor));}

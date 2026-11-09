@@ -89,6 +89,12 @@ test('VM profile mismatch cannot turn into a ready device',async()=>{
  const store=storage();const cloud=new CloudVMManager({...store,env:cloudEnv,call:async()=>ready('profile-dad')});
  await assert.rejects(cloud.start('mom',cloud.quote('mom',1).quoteId),{status:502});assert.equal(store.load().cloudSessions.mom.state,'unknown');assert.equal(phoneBinding('mom',runtimePhoneEnv(store.load(),cloudEnv)),null);
 });
+test('stopping an uncertain VM recovers its receipt without requiring ADB',async()=>{
+ const store=storage(),calls=[];const cloud=new CloudVMManager({...store,env:cloudEnv,call:async input=>{calls.push(input);if(input.operation==='start')throw new Error('network');if(input.operation==='recover'){assert.equal(input.connect,false);return ready(input.phoneId);}return {ok:true,phoneId:input.phoneId,state:'stopped'};}});
+ await assert.rejects(cloud.start('mom',cloud.quote('mom',1).quoteId));
+ assert.equal((await cloud.stop('mom')).state,'stopped');assert.deepEqual(calls.map(x=>x.operation),['start','recover','stop']);
+ assert.equal(calls[1].requestId,calls[0].requestId);assert.equal(calls[2].requestId,calls[0].requestId);
+});
 test('Android app completion requires expected foreground package and device evidence',async()=>{
  for(const matches of [true,false]){
   const s=storage().load(),env={MOLLA_PHONE_BINDINGS:'{"mom":{"serial":"test-vm"}}',MOLLA_ALLOW_ANDROID_APPS:'1'};

@@ -5,6 +5,12 @@ import { AndroidExecutor, parseScreen } from '../src/android.mjs';
 import { phoneBinding } from '../src/core.mjs';
 
 const modelEnv = { MOLLA_LLM_ENABLED: '1', MOLLA_LLM_BASE_URL: 'https://provider.example/v1', MOLLA_LLM_API_KEY: 'SECRET_TEST_KEY', MOLLA_LLM_MODEL: 'test' };
+test('connection failure is distinct from invalid model output and never retried', async () => {
+  let calls = 0;
+  const provider = new CompatibleProvider({ env: modelEnv, fetcher: async () => { calls++; throw new TypeError('fetch failed', { cause: { code: 'ENOTFOUND' } }); } });
+  await assert.rejects(provider.complete({ messages: [], tools: [] }), { code: 'llm_network_error' });
+  assert.equal(calls, 1);
+});
 test('compatible adapter uses structured tool API, no redirects/retries; malformed/parallel/refused outputs fail closed', async () => {
   let options, calls = 0;
   const good = { choices: [{ finish_reason: 'tool_calls', message: { tool_calls: [{ id: 'one', type: 'function', function: { name: 'respond', arguments: '{"text":"안녕"}' } }] } }] };
