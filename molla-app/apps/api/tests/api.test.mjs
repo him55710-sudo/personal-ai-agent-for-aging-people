@@ -17,7 +17,7 @@ test('bounded agent HTTP approval fixes goal/budgets; owner-only execution recor
   const android = fixtureAndroid('font'); let turns = 0;
   const f = await fixture(t, { runner: android.runner, env: { MOLLA_ALLOW_ANDROID_AGENT: '1' }, provider: { complete: async () => ++turns === 1
     ? call('phone_agent_prepare', { goal: 'font_size', targetScale: 1.15, maxSteps: 4, maxSeconds: 30, maxTokens: 20000 })
-    : { ...call('android_step', { operation: 'font_set', elementId: '', reason: 'Apply the approved scale' }), usage: { inputTokens: 100, outputTokens: 20 } } } });
+    : { ...call('android_font_set', { reason: 'Apply the approved scale' }), usage: { inputTokens: 100, outputTokens: 20 } } } });
   await f.ready();
   const task = (await f.request('mom', '/chat', { text: '글씨 크기를 1.15배로 바꿔줘', requestId: randomUUID() })).body.task;
   assert.equal(task.action.execution, 'android-agent'); assert.equal(android.commands.length, 0);

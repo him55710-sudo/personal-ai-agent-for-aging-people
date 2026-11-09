@@ -43,7 +43,7 @@ export function callCloud(input,{env=process.env}={}){
  });
 }
 export class CloudVMManager {
- constructor({load,save,env=process.env,call=callCloud}){Object.assign(this,{load,save,env,call});this.busy=new Set();}
+ constructor({load,save,env=process.env,call=callCloud}){Object.assign(this,{load,save,env,call});this.busy=new Set();this.inFlight=new Map();this.stopRequests=new Map();}
  assigned(actor){const b=cloudMappings(this.env)[actor];if(!b)throw new DomainError('운영자가 이 사용자의 저장형 VM을 먼저 배정해야 해요.',409);return b;}
  quote(actor,minutes){
   const s=this.load();new PolicyEngine(s).request(actor,actor,'phone');const b=this.assigned(actor),limits=vmLimits(this.env);
@@ -52,7 +52,11 @@ export class CloudVMManager {
   s.vmQuotes??=[];s.vmQuotes=s.vmQuotes.filter(q=>Date.parse(q.expiresAt)>Date.now()&&q.owner!==actor);s.vmQuotes.push(quote);this.save(s);
   const {owner,phoneId,policyVersion,...visible}=quote;return visible;
  }
- async locked(actor,fn){if(this.busy.has(actor))throw new DomainError('VM 요청을 처리 중이에요.',409);this.busy.add(actor);try{return await fn();}finally{this.busy.delete(actor);}}
+ async locked(actor,fn,{stopping=false}={}){
+  if(this.busy.has(actor)||(!stopping&&this.stopRequests.has(actor)))throw new DomainError('VM 요청을 처리 중이에요.',409);
+  this.busy.add(actor);let release;this.inFlight.set(actor,new Promise(resolve=>{release=resolve;}));
+  try{return await fn();}finally{this.busy.delete(actor);this.inFlight.delete(actor);release();}
+ }
  async start(actor,quoteId){return this.locked(actor,async()=>{
   let s=this.load();new PolicyEngine(s).request(actor,actor,'phone');const b=this.assigned(actor),q=s.vmQuotes?.find(q=>q.quoteId===quoteId&&q.owner===actor);
   if(!q||q.used||q.phoneId!==b.phoneId||Date.parse(q.expiresAt)<=Date.now()||q.policyVersion!==member(s,actor).policyVersion)throw new DomainError('실행 견적이 만료되었어요. 비용과 시간을 다시 확인해 주세요.',409);
@@ -88,6 +92,7 @@ export class CloudVMManager {
  });}
  async stopUnrestricted(actor){
   const s=this.load(),b=this.assigned(actor),session=s.cloudSessions?.[actor];
+  if(session?.phoneId===b.phoneId&&session.state==='stopped')return phoneRuntime(s,actor,this.env);
   if(!session?.sessionId||session.phoneId!==b.phoneId){
    const recovered=await this.recover(b,session,{connect:false});
    this.record(actor,b.phoneId,recovered);
@@ -95,5 +100,15 @@ export class CloudVMManager {
   }
   const current=this.load().cloudSessions[actor];const data=await this.call({operation:'stop',phoneId:b.phoneId,sessionId:current.sessionId,requestId:current.requestId},{env:this.env});this.record(actor,b.phoneId,data);return phoneRuntime(this.load(),actor,this.env);
  }
- async stop(actor){return this.locked(actor,()=>this.stopUnrestricted(actor));}
+ async stop(actor){
+  if(this.stopRequests.has(actor))return this.stopRequests.get(actor);
+  // A stop must survive a concurrent start/status call. Wait for its receipt,
+  // then stop that same session; never launch a replacement or race the provider.
+  const current=this.inFlight.get(actor);
+  const work=Promise.resolve().then(async()=>{
+   await current;
+   return this.locked(actor,()=>this.stopUnrestricted(actor),{stopping:true});
+  }).finally(()=>this.stopRequests.delete(actor));
+  this.stopRequests.set(actor,work);return work;
+ }
 }

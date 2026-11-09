@@ -6,8 +6,9 @@ import { digest } from './storage.mjs';
 import { AndroidComposeExecutor, phoneBinding, adbPath, shellQuote, DomainError } from './core.mjs';
 
 const run = promisify(execFile);
-const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '', processEntities: false, parseAttributeValue: false });
-const sensitive = /password|passwd|passcode|one.?time|verification.?code|인증.?번호|인증.?코드|비밀번호|로그인|sign.?in|log.?in/i;
+// DTD/custom entities are rejected before parsing. Decode standard XML escaping in UI text.
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '', processEntities: true, htmlEntities: true, parseAttributeValue: false });
+const sensitive = /password|passwd|passcode|\bOTP\b|one.?time|verification.?code|인증.?번호|인증.?코드|비밀번호|로그인|sign.?in|log.?in|pay now|checkout|transfer money|결제|송금/i;
 const searchIds = new Set(['com.android.settings:id/search_action_bar', 'com.android.settings:id/search', 'com.android.settings:id/search_src_text', 'android:id/search_src_text']);
 const listIds = new Set(['android:id/list', 'com.android.settings:id/recycler_view', 'com.android.settings:id/list']);
 const smsPackages = new Set(['com.google.android.apps.messaging', 'com.android.messaging', 'com.android.mms']);
@@ -20,8 +21,11 @@ export function parseScreen(xml, foreground) {
     if (Array.isArray(value)) { value.forEach(walk); return; }
     if (value['resource-id'] !== undefined) {
       if (value.password === 'true') throw new DomainError('로그인·인증 화면은 주인이 직접 진행해 주세요.', 403);
-      const label = `${value.text || ''} ${value['content-desc'] || ''}`.trim();
-      if (sensitive.test(label) && /EditText|Button/.test(value.class || '')) throw new DomainError('로그인·인증 화면은 주인이 직접 진행해 주세요.', 403);
+      const text = value.text || '', contentDescription = value['content-desc'] || '';
+      // Accessibility hints are not part of the visible field value. Keep them in the
+      // screen identity and sensitivity checks without corrupting exact-value verification.
+      const label = (text.trim() ? text : contentDescription).trim();
+      if (sensitive.test(`${text} ${contentDescription}`) && (/EditText|Button/.test(value.class || '') || value['resource-id'].endsWith('/title'))) throw new DomainError('로그인·인증·결제 화면은 주인이 직접 진행해 주세요.', 403);
       const bounds = /^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$/.exec(value.bounds || '')?.slice(1).map(Number);
       if (bounds && bounds.every(n => n <= 8192) && bounds[2] > bounds[0] && bounds[3] > bounds[1]) {
         const resourceId = value['resource-id'], actions = [];
@@ -30,7 +34,7 @@ export function parseScreen(xml, foreground) {
           if (searchIds.has(resourceId) && /EditText/.test(value.class || '') && value.focused === 'true') actions.push('input');
           if (listIds.has(resourceId) && value.scrollable === 'true') actions.push('scroll_up', 'scroll_down');
         }
-        nodes.push({ id: digest(JSON.stringify([nodes.length, resourceId, bounds, label])).slice(0, 20), resourceId, label: label.slice(0, 1100), bounds, actions, package: value.package,
+        nodes.push({ id: digest(JSON.stringify([nodes.length, resourceId, bounds, text, contentDescription])).slice(0, 20), resourceId, label: label.slice(0, 1100), contentDescription: contentDescription.slice(0, 1100), bounds, actions, package: value.package,
           className: value.class || '', enabled: value.enabled === 'true', clickable: value.clickable === 'true', focused: value.focused === 'true', scrollable: value.scrollable === 'true', checked: value.checked === 'true' });
       }
     }
@@ -59,7 +63,9 @@ export class AndroidExecutor {
       if (/\s([A-Za-z0-9_.]+)\/[A-Za-z0-9_.$]+/.exec(latestLine || '')?.[1] !== foreground) throw new DomainError('화면을 읽는 중 앱이 바뀌었어요.', 409);
       authorize();
       if (JSON.stringify(this.binding()) !== JSON.stringify(binding)) throw new DomainError('기기 연결이 변경되었어요.', 403);
-      return parseScreen(xml.slice(xml.indexOf('<?xml')), foreground);
+      // `cat` returns the XML itself; a declaration is optional. Never slice at -1
+      // or discard a prefix that could contain a forbidden DTD.
+      return parseScreen(xml.trim(), foreground);
     } finally { await this.adb(binding, ['shell', `rm -f ${path}`]).catch(() => {}); }
   }
   async execute(action, hooks) {

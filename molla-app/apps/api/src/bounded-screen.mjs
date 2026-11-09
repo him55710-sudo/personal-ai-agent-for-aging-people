@@ -4,7 +4,7 @@ const settings = 'com.android.settings';
 const navLabels = /^(Settings|Display|Display & touch|Accessibility|Font size|Display size and text|설정|디스플레이|접근성|글꼴 크기|글씨 크기|디스플레이 크기 및 텍스트)$/i;
 const fontLabel = /^(Font size|글꼴 크기|글씨 크기)$/i;
 const searchIds = new Set(['com.android.settings:id/search_action_bar', 'com.android.settings:id/search', 'com.android.settings:id/search_src_text', 'android:id/search_src_text']);
-const listIds = new Set(['android:id/list', 'com.android.settings:id/recycler_view', 'com.android.settings:id/list']);
+const listIds = new Set(['android:id/list', 'com.android.settings:id/recycler_view', 'com.android.settings:id/list', 'com.android.settings:id/main_content']);
 const forbidden = /password|passcode|\bOTP\b|verification code|sign.?in|log.?in|pay now|checkout|transfer money|비밀번호|인증.?번호|인증.?코드|로그인|결제|송금/i;
 const inside = (a, b) => a[0] <= b[0] && a[1] <= b[1] && a[2] >= b[2] && a[3] >= b[3];
 
@@ -17,8 +17,9 @@ export function boundedView(screen, scope) {
   if (allowed && scope.goal === 'font_size') {
     const labels = screen.nodes.filter(n => n.package === settings && navLabels.test(n.label));
     const isFont = labels.some(n => fontLabel.test(n.label)) && screen.nodes.some(n => /SeekBar/.test(n.className));
-    const isSearch = screen.nodes.some(n => searchIds.has(n.resourceId));
-    if (labels.length || isSearch) screenType = isFont ? 'font_size' : isSearch ? 'settings_search' : 'settings_navigation';
+    const hasSearch = screen.nodes.some(n => searchIds.has(n.resourceId));
+    const isSearch = screen.nodes.some(n => searchIds.has(n.resourceId) && /EditText/.test(n.className));
+    if (labels.length || hasSearch) screenType = isFont ? 'font_size' : isSearch ? 'settings_search' : 'settings_navigation';
     for (const node of screen.nodes.filter(n => n.package === settings && n.enabled)) {
       const actions = [];
       const label = navLabels.test(node.label) ? node.label : undefined;
@@ -48,14 +49,25 @@ export function verifyGoal(screen, scope, action, facts = {}) {
     const digits = action.recipient.phone.replace(/\D/g, '');
     return address.length === 1 && address[0].label.replace(/\D/g, '') === digits && body.length === 1 && body[0].label.trim() === scope.body.trim();
   }
-  // A single AOSP alarm row must contain the exact 24-hour time, label and enabled switch.
-  // 12-hour/ambiguous/OEM layouts intentionally require a human check.
-  const time = `${String(scope.hour).padStart(2, '0')}:${String(scope.minute).padStart(2, '0')}`;
-  if (facts.clockFormat !== '24') return false;
+  // Require one explicit clock field and an unambiguous time in the same known alarm row.
   return screen.nodes.filter(n => /\/alarm( clock)?_?item$|\/alarm_item$/.test(n.resourceId)).some(row => {
     const nodes = screen.nodes.filter(n => inside(row.bounds, n.bounds) && n.package === screen.package);
-    if (nodes.some(n => /\/(am_pm|ampm)$/.test(n.resourceId) || /^(AM|PM|오전|오후)$/i.test(n.label))) return false;
-    return nodes.some(n => /\/(digital_clock|clock|time)$/.test(n.resourceId) && n.label.replace(/\s/g, '') === time)
+    const clocks = nodes.filter(n => /\/(digital_clock|clock|time)$/.test(n.resourceId));
+    if (clocks.length !== 1) return false;
+    const match = clocks[0].label.trim().match(/^(?:(AM|PM|오전|오후)\s*)?(\d{1,2}):(\d{2})(?:\s*(AM|PM|오전|오후))?$/i);
+    if (!match || (match[1] && match[4])) return false;
+    const markers = nodes.filter(n => /\/(am_pm|ampm)$/.test(n.resourceId));
+    if (markers.length > 1) return false;
+    const inline = match[1] || match[4], separate = markers[0]?.label.trim();
+    if (inline && separate) return false;
+    const marker = (inline || separate || '').toUpperCase();
+    let hour = Number(match[2]); const minute = Number(match[3]);
+    if (minute > 59 || hour > 23) return false;
+    if (marker) {
+      if (facts.clockFormat === '24' || !['AM', 'PM', '오전', '오후'].includes(marker) || hour < 1 || hour > 12) return false;
+      hour = hour % 12 + (['PM', '오후'].includes(marker) ? 12 : 0);
+    } else if (facts.clockFormat !== '24') return false;
+    return hour === scope.hour && minute === scope.minute
       && nodes.some(n => /\/(label|alarm_label)$/.test(n.resourceId) && n.label === scope.label)
       && nodes.some(n => /\/(onoff|alarm_switch)$/.test(n.resourceId) && n.checked)
       && nodes.some(n => /\/(repeat_days|days_of_week)$/.test(n.resourceId) && /^(Never|Once|반복 안함|한 번)$/.test(n.label));

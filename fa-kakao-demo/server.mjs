@@ -4,6 +4,7 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { createAgent } from './agent.mjs';
+import { proxyOwner } from './owner-proxy.mjs';
 import { createRouter, validRouterRequest, validTrustRequest } from './router.mjs';
 
 const PUBLIC = fileURLToPath(new URL('./public', import.meta.url));
@@ -124,6 +125,7 @@ export function createDemoServer(env = process.env) {
 
     try {
       const { pathname, searchParams } = new URL(request.url, host.origin);
+      if (pathname.startsWith('/api/owner/')) return await proxyOwner(request, response, pathname.slice('/api/owner'.length), host.origin, env);
       if (request.method === 'GET' && pathname === '/api/status') {
         return json(response, 200, { mode: agent.mode });
       }

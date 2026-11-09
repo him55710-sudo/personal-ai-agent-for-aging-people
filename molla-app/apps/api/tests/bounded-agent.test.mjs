@@ -16,7 +16,7 @@ function planned(goal, extra = {}) {
   const args = { goal, maxSteps: 8, maxSeconds: 60, maxTokens: 30000, ...(goal === 'font_size' ? { targetScale: 1.15 } : goal === 'sms_draft' ? { contactId: contact.id, body: '조금 늦어요.' } : { hour: 7, minute: 30, label: '아침' }), ...extra };
   return { state, args, action: prepareAgentTask(state, 'mom', args, env).action };
 }
-export const result = step => ({ call: { function: { name: 'android_step', arguments: JSON.stringify({ elementId: '', reason: 'Choose an approved action', ...step }) } }, model: 'fixture/model', provider: 'fixture', usage: { inputTokens: 100, outputTokens: 30 } });
+export const result = step => ({ call: { function: { name: `android_${step.operation}`, arguments: JSON.stringify({ reason: 'Choose an approved action', ...Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'operation')) }) } }, model: 'fixture/model', provider: 'fixture', usage: { inputTokens: 100, outputTokens: 30 } });
 function planner({ messages }) {
   const screen = JSON.parse(messages.at(-1).content).screen;
   if (screen.screenType === 'font_size') return result({ operation: 'font_set' });
@@ -109,4 +109,35 @@ test.after(() => {
     const path = resolve(import.meta.dirname, '../../../docs/live/bounded-agent-fixtures.json'); mkdirSync(resolve(path, '..'), { recursive: true });
     writeFileSync(path, JSON.stringify({ fixtureOnly: true, realModelCalled: false, realVmStarted: false, scenarios: reports }, null, 2) + '\n');
   }
+});
+
+test('real-run regression: global tool cannot carry an unrelated element ID; launch is offered outside app', async () => {
+  let offered;
+  const r = await run('sms_draft', { complete: async m => { offered=m; return planner(m); } });
+  assert(r.evidence.verified);
+  const compose=offered.tools.find(t=>t.function.name==='android_compose');
+  assert(compose); assert(!compose.function.parameters.properties.elementId);
+  assert.match(compose.function.description, /outside_scope/);
+  const malformed=await run('font_size', { complete: async()=>result({operation:'back',elementId:'search-row'}) });
+  assert.equal(malformed.effects,0);
+});
+test('alarm verification accepts explicit AM/PM with unset clock preference, rejects ambiguity and contradictions', async () => {
+  const action=planned('alarm').action;
+  const check=(xml,facts={clockFormat:'null'})=>verifyGoal(parseScreen(xml,'com.android.deskclock'),action.scope,action,facts);
+  assert(check(screens.alarm.replace('07:30','7:30 AM')));
+  assert(!check(screens.alarm));
+  assert(!check(screens.alarm.replace('07:30','7:30 PM')));
+  assert(!check(screens.alarm.replace('07:30','7:30 AM'),{clockFormat:'24'}));
+  const android=fixtureAndroid('outside'), base=android.runner;
+  android.runner=async(...args)=>args[1].at(-1)==='settings get system time_12_24'?{stdout:'null'}:base(...args);
+  const r=await run('alarm',{android});
+  assert.equal(r.effects,1); assert.equal(r.evidence.verified,false);
+  assert.equal(r.evidence.report.usage.inputTokens,100);
+});
+test('Settings root search launcher is navigation, not an editable search screen', () => {
+  const screen=xml(node('com.android.settings:id/search_action_bar','Search settings',{clickable:true}),node('com.android.settings:id/main_content','',{scrollable:true,bounds:'[0,100][720,1200]'}));
+  const view=boundedView(parseScreen(screen,'com.android.settings'),planned('font_size').action.scope);
+  assert.equal(view.screenType,'settings_navigation');
+  assert(view.elements.some(n=>n.actions.includes('scroll_down')));
+  assert(!view.elements.some(n=>n.actions.includes('input')));
 });
