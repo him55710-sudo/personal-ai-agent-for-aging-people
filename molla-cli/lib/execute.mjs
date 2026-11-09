@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { own, DomainError, log } from '../runtime/core.mjs';
 import { PolicyEngine } from '../runtime/policy.mjs';
 import { LocalDraftExecutor } from '../runtime/orchestrator.mjs';
@@ -38,6 +38,7 @@ export async function execute(store,actor,taskId,{executor,env=process.env,guard
    else if(evidence?.kind==='sms_composed'&&claim.action.execution==='android-compose'&&evidence.device===claim.action.device?.serial&&evidence.verified===true&&evidence.messageSent===false)t.status='completed';
    else if((evidence?.kind==='screen_inspected'&&claim.action.execution==='android-inspect'||evidence?.kind==='navigation_completed'&&claim.action.execution==='android-navigation')&&evidence.device===claim.action.device?.serial&&evidence.verified===true)t.status='completed';
    else if(evidence?.kind==='memory_written'&&claim.action.execution==='memory'&&evidence.verified===true&&s.memories.some(m=>m.id===evidence.memoryId&&m.owner===actor&&m.text===claim.action.body))t.status='completed';
+   else if(evidence?.kind==='agent_run'&&claim.action.execution==='android-agent'&&evidence.device===claim.action.device?.serial)t.status=evidence.verified===true&&evidence.report?.verified===true&&evidence.report?.outcome==='completed'&&evidence.scopeHash===createHash('sha256').update(JSON.stringify(claim.action.scope)).digest('hex')?'completed':'needs_verification';
    else if(evidence?.kind==='intent_opened')t.status='needs_verification';
    else throw new DomainError('실행 결과를 검증할 수 없어요.',409);
    if(t.lifecycleVersion)transition(s,t,t.status);t.evidence=evidence;t.result=evidence.summary;t.finishedAt=new Date().toISOString();log(s,actor,'실행 결과를 기록했어요',t.result);return t;

@@ -1,0 +1,321 @@
+{
+  "fixtureOnly": true,
+  "realModelCalled": false,
+  "realVmStarted": false,
+  "scenarios": [
+    {
+      "scenario": "font_size",
+      "fixturePassed": true,
+      "realEnvironment": "not_run",
+      "version": 1,
+      "source": "synthetic-ui-fixture",
+      "goal": "font_size",
+      "scopeHash": "8afe1179481faf901890ea70c9a24b0cbe5e470fced1b23855ee82963e11aaaf",
+      "startedAt": "2026-11-09T05:21:38.815Z",
+      "steps": [
+        {
+          "index": 1,
+          "observed": {
+            "package": "com.android.settings",
+            "screenType": "settings_navigation",
+            "screenHash": "7b00328569ab4059d50dce0afd3d817b30220755bbd5f08da65882ba8313b1b7",
+            "capturedAt": "2026-11-09T05:21:38.822Z",
+            "elements": [
+              {
+                "id": "161fb0bcf217685f75e8",
+                "label": "Display",
+                "actions": [
+                  "tap"
+                ]
+              }
+            ],
+            "operations": [
+              "back",
+              "finish",
+              "ask"
+            ]
+          },
+          "facts": {},
+          "goalVerified": false,
+          "modelRequested": true,
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 30
+          },
+          "model": "fixture/model",
+          "provider": "fixture",
+          "plan": {
+            "elementId": "161fb0bcf217685f75e8",
+            "reason": "Choose an approved action",
+            "operation": "tap"
+          },
+          "effectStarted": true,
+          "after": {
+            "package": "com.android.settings",
+            "screenType": "settings_navigation",
+            "screenHash": "7da0a2d872ec3f07d7e3eeab9be3a874ed919d39a02b9b6acfa1a56cf405acf8",
+            "capturedAt": "2026-11-09T05:21:38.828Z",
+            "elements": [
+              {
+                "id": "b76bbf7e785f0bb9ccad",
+                "label": "Font size",
+                "actions": [
+                  "tap"
+                ]
+              }
+            ],
+            "operations": [
+              "back",
+              "finish",
+              "ask"
+            ]
+          },
+          "result": "screen_changed"
+        },
+        {
+          "index": 2,
+          "observed": {
+            "package": "com.android.settings",
+            "screenType": "settings_navigation",
+            "screenHash": "7da0a2d872ec3f07d7e3eeab9be3a874ed919d39a02b9b6acfa1a56cf405acf8",
+            "capturedAt": "2026-11-09T05:21:38.829Z",
+            "elements": [
+              {
+                "id": "b76bbf7e785f0bb9ccad",
+                "label": "Font size",
+                "actions": [
+                  "tap"
+                ]
+              }
+            ],
+            "operations": [
+              "back",
+              "finish",
+              "ask"
+            ]
+          },
+          "facts": {
+            "fontScale": 1
+          },
+          "goalVerified": false,
+          "modelRequested": true,
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 30
+          },
+          "model": "fixture/model",
+          "provider": "fixture",
+          "plan": {
+            "elementId": "b76bbf7e785f0bb9ccad",
+            "reason": "Choose an approved action",
+            "operation": "tap"
+          },
+          "effectStarted": true,
+          "after": {
+            "package": "com.android.settings",
+            "screenType": "font_size",
+            "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
+            "capturedAt": "2026-11-09T05:21:38.831Z",
+            "elements": [],
+            "operations": [
+              "back",
+              "font_set",
+              "finish",
+              "ask"
+            ]
+          },
+          "result": "screen_changed"
+        },
+        {
+          "index": 3,
+          "observed": {
+            "package": "com.android.settings",
+            "screenType": "font_size",
+            "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
+            "capturedAt": "2026-11-09T05:21:38.832Z",
+            "elements": [],
+            "operations": [
+              "back",
+              "font_set",
+              "finish",
+              "ask"
+            ]
+          },
+          "facts": {
+            "fontScale": 1.15
+          },
+          "goalVerified": true,
+          "modelRequested": true,
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 30
+          },
+          "model": "fixture/model",
+          "provider": "fixture",
+          "plan": {
+            "elementId": "",
+            "reason": "Choose an approved action",
+            "operation": "font_set"
+          },
+          "effectStarted": true,
+          "after": {
+            "package": "com.android.settings",
+            "screenType": "font_size",
+            "screenHash": "bea46edf46426fab97caa90aba3c054b3c002ffabdf1a6a57c773056583bbed6",
+            "capturedAt": "2026-11-09T05:21:38.835Z",
+            "elements": [],
+            "operations": [
+              "back",
+              "font_set",
+              "finish",
+              "ask"
+            ]
+          },
+          "result": "goal_verified"
+        }
+      ],
+      "usage": {
+        "inputTokens": 300,
+        "outputTokens": 90,
+        "reservedTokens": 14538
+      },
+      "outcome": "completed",
+      "verified": true,
+      "elapsedMs": 21,
+      "finishedAt": "2026-11-09T05:21:38.836Z"
+    },
+    {
+      "scenario": "sms_draft",
+      "fixturePassed": true,
+      "realEnvironment": "not_run",
+      "version": 1,
+      "source": "synthetic-ui-fixture",
+      "goal": "sms_draft",
+      "scopeHash": "45a27b604b8d5a33d0e20cf2faf5068d8d667a598d44109e73fa45593f0464d6",
+      "startedAt": "2026-11-09T05:21:38.837Z",
+      "steps": [
+        {
+          "index": 1,
+          "observed": {
+            "package": "outside_scope",
+            "screenType": "outside_scope",
+            "screenHash": "e99463b3391b4a41aaaf85911c7ad34d68d992a3ae7da8e9175ad6334059f71f",
+            "capturedAt": "2026-11-09T05:21:38.839Z",
+            "elements": [],
+            "operations": [
+              "compose",
+              "finish",
+              "ask"
+            ]
+          },
+          "facts": {
+            "exactRecipientAndBodyVisible": true
+          },
+          "goalVerified": true,
+          "modelRequested": true,
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 30
+          },
+          "model": "fixture/model",
+          "provider": "fixture",
+          "plan": {
+            "elementId": "",
+            "reason": "Choose an approved action",
+            "operation": "compose"
+          },
+          "effectStarted": true,
+          "after": {
+            "package": "com.android.messaging",
+            "screenType": "sms_draft",
+            "screenHash": "d2d94609b24d4be90685866e672bf77877ee4de29e0ecf133d2b40cb9491ac0d",
+            "capturedAt": "2026-11-09T05:21:38.842Z",
+            "elements": [],
+            "operations": [
+              "compose",
+              "finish",
+              "ask"
+            ]
+          },
+          "result": "goal_verified"
+        }
+      ],
+      "usage": {
+        "inputTokens": 100,
+        "outputTokens": 30,
+        "reservedTokens": 4827
+      },
+      "outcome": "completed",
+      "verified": true,
+      "elapsedMs": 6,
+      "finishedAt": "2026-11-09T05:21:38.843Z"
+    },
+    {
+      "scenario": "alarm",
+      "fixturePassed": true,
+      "realEnvironment": "not_run",
+      "version": 1,
+      "source": "synthetic-ui-fixture",
+      "goal": "alarm",
+      "scopeHash": "98b182c96983fd0a290c2bbe75b665a94e23c82f7f9cb895dc5915473388b429",
+      "startedAt": "2026-11-09T05:21:38.843Z",
+      "steps": [
+        {
+          "index": 1,
+          "observed": {
+            "package": "outside_scope",
+            "screenType": "outside_scope",
+            "screenHash": "e99463b3391b4a41aaaf85911c7ad34d68d992a3ae7da8e9175ad6334059f71f",
+            "capturedAt": "2026-11-09T05:21:38.844Z",
+            "elements": [],
+            "operations": [
+              "set_alarm",
+              "finish",
+              "ask"
+            ]
+          },
+          "facts": {
+            "clockFormat": "24",
+            "exactTimeLabelEnabledOnceVisible": true
+          },
+          "goalVerified": true,
+          "modelRequested": true,
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 30
+          },
+          "model": "fixture/model",
+          "provider": "fixture",
+          "plan": {
+            "elementId": "",
+            "reason": "Choose an approved action",
+            "operation": "set_alarm"
+          },
+          "effectStarted": true,
+          "after": {
+            "package": "com.android.deskclock",
+            "screenType": "alarm",
+            "screenHash": "5224df39dee2626bbcc1c9848328c9dc1b3fb58596f30762ae5655d5c004a811",
+            "capturedAt": "2026-11-09T05:21:38.848Z",
+            "elements": [],
+            "operations": [
+              "set_alarm",
+              "finish",
+              "ask"
+            ]
+          },
+          "result": "goal_verified"
+        }
+      ],
+      "usage": {
+        "inputTokens": 100,
+        "outputTokens": 30,
+        "reservedTokens": 4818
+      },
+      "outcome": "completed",
+      "verified": true,
+      "elapsedMs": 6,
+      "finishedAt": "2026-11-09T05:21:38.849Z"
+    }
+  ]
+}

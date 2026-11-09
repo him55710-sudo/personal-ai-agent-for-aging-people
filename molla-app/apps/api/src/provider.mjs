@@ -13,7 +13,7 @@ export function modelStatus(env) { const { provider, key, url, model, enabled } 
  */
 export class CompatibleProvider {
   constructor({ env = process.env, fetcher = fetch } = {}) { this.env = env; this.fetcher = fetcher; }
-  async complete({ messages, tools, signal }) {
+  async complete({ messages, tools, signal, maxOutputTokens = 1800 }) {
     const c = modelConfig(this.env);
     if (!c.enabled || !c.key || !c.model || !c.url) throw new DomainError('LLM 서버·모델·키 설정이 필요해요.', 503);
     const url = new URL(c.url);
@@ -22,7 +22,8 @@ export class CompatibleProvider {
       const response = await this.fetcher(`${url.href.replace(/\/$/, '')}/chat/completions`, {
         method: 'POST', redirect: 'error', signal,
         headers: { Authorization: `Bearer ${c.key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: c.model, messages, tools, tool_choice: 'required', parallel_tool_calls: false, max_tokens: 1800, stream: false }),
+        body: JSON.stringify({ model: c.model, messages, tools, tool_choice: 'required', parallel_tool_calls: false,
+          ...(c.model === 'gpt-6.1-terra' ? { max_completion_tokens: maxOutputTokens, reasoning_effort: this.env.LETSUR_REASONING_EFFORT || 'medium' } : { max_tokens: maxOutputTokens }), stream: false }),
       });
       if (!response.ok) { await response.body?.cancel(); throw Object.assign(new Error('provider_rejected'), { providerStatus: response.status }); }
       const reader = response.body.getReader(); const chunks = []; let size = 0;
@@ -30,7 +31,7 @@ export class CompatibleProvider {
       const result = JSON.parse(Buffer.concat(chunks).toString('utf8')), choice = result.choices?.[0];
       const calls = choice?.message?.tool_calls;
       if (choice?.finish_reason !== 'tool_calls' || choice.message.refusal || !Array.isArray(calls) || calls.length !== 1 || calls[0].type !== 'function' || typeof calls[0].id !== 'string' || calls[0].id.length > 200) throw new Error('invalid_tool_response');
-      return { call: calls[0], model: c.model, provider: c.provider, usage: { inputTokens: result.usage?.prompt_tokens || 0, outputTokens: result.usage?.completion_tokens || 0 } };
+      return { call: calls[0], model: c.model, provider: c.provider, usage: { inputTokens: result.usage?.prompt_tokens, outputTokens: result.usage?.completion_tokens } };
     } catch (error) {
       const network = error instanceof TypeError && /fetch|network/i.test(error.message) || ['ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET'].includes(error.cause?.code);
       const known = { 401: 'LLM 키 인증을 확인해 주세요.', 402: 'LLM 잔액을 확인해 주세요.', 403: '모델 사용 권한을 확인해 주세요.', 429: 'LLM 호출 한도에 도달했어요. 잠시 후 상태를 확인해 주세요.' };
