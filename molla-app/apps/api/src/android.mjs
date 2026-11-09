@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { randomUUID } from 'node:crypto';
 import { digest } from './storage.mjs';
 import { AndroidComposeExecutor, phoneBinding, adbPath, shellQuote, DomainError } from './core.mjs';
@@ -13,7 +13,7 @@ const listIds = new Set(['android:id/list', 'com.android.settings:id/recycler_vi
 const smsPackages = new Set(['com.google.android.apps.messaging', 'com.android.messaging', 'com.android.mms']);
 
 export function parseScreen(xml, foreground) {
-  if (xml.length > 512000 || /<!DOCTYPE|<!ENTITY/i.test(xml)) throw new DomainError('화면 XML을 안전하게 읽을 수 없어요.', 502);
+  if (xml.length > 512000 || /<!DOCTYPE|<!ENTITY/i.test(xml) || XMLValidator.validate(xml) !== true) throw new DomainError('화면 XML을 안전하게 읽을 수 없어요.', 502);
   const root = parser.parse(xml); const nodes = [];
   function walk(value) {
     if (!value || typeof value !== 'object') return;
@@ -30,7 +30,8 @@ export function parseScreen(xml, foreground) {
           if (searchIds.has(resourceId) && /EditText/.test(value.class || '') && value.focused === 'true') actions.push('input');
           if (listIds.has(resourceId) && value.scrollable === 'true') actions.push('scroll_up', 'scroll_down');
         }
-        nodes.push({ id: digest(JSON.stringify([resourceId, bounds, label])).slice(0, 20), resourceId, label: label.slice(0, 1100), bounds, actions, package: value.package });
+        nodes.push({ id: digest(JSON.stringify([nodes.length, resourceId, bounds, label])).slice(0, 20), resourceId, label: label.slice(0, 1100), bounds, actions, package: value.package,
+          className: value.class || '', enabled: value.enabled === 'true', clickable: value.clickable === 'true', focused: value.focused === 'true', scrollable: value.scrollable === 'true', checked: value.checked === 'true' });
       }
     }
     for (const [key, child] of Object.entries(value)) if (key === 'node' || key === 'hierarchy') walk(child);
@@ -42,7 +43,7 @@ export function parseScreen(xml, foreground) {
 export class AndroidExecutor {
   constructor(owner, { getEnv, runner = run } = {}) { Object.assign(this, { owner, getEnv, runner }); }
   binding() { const binding = phoneBinding(this.owner, this.getEnv()); if (!binding) throw new DomainError('내 Android 연결을 확인해 주세요.', 409); return binding; }
-  async adb(binding, args) { return this.runner(adbPath(this.getEnv()), ['-s', binding.serial, ...args], { timeout: 15000, maxBuffer: 512000, windowsHide: true }); }
+  async adb(binding, args) { return this.runner(adbPath(this.getEnv()), ['-s', binding.serial, ...args], { timeout: 15000, maxBuffer: 512000, windowsHide: true, ...(this.signal ? { signal: this.signal } : {}) }); }
   async screen(binding, authorize) {
     authorize();
     const { stdout: raw } = await this.adb(binding, ['shell', 'dumpsys activity activities']);
@@ -53,6 +54,9 @@ export class AndroidExecutor {
     try {
       await this.adb(binding, ['shell', `uiautomator dump ${path}`]);
       const { stdout: xml } = await this.adb(binding, ['shell', `cat ${path}`]);
+      const { stdout: latest } = await this.adb(binding, ['shell', 'dumpsys activity activities']);
+      const latestLine = latest.split(/\r?\n/).find(v => /topResumedActivity|mResumedActivity/.test(v));
+      if (/\s([A-Za-z0-9_.]+)\/[A-Za-z0-9_.$]+/.exec(latestLine || '')?.[1] !== foreground) throw new DomainError('화면을 읽는 중 앱이 바뀌었어요.', 409);
       authorize();
       if (JSON.stringify(this.binding()) !== JSON.stringify(binding)) throw new DomainError('기기 연결이 변경되었어요.', 403);
       return parseScreen(xml.slice(xml.indexOf('<?xml')), foreground);

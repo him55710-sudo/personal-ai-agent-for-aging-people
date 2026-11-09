@@ -1,9 +1,11 @@
 import { ajv, object, string, choice } from './schema.mjs';
 import { CompatibleProvider, modelStatus } from './provider.mjs';
 import { digest } from './storage.mjs';
+import { agentScopeSchema, prepareAgentTask } from './bounded-scope.mjs';
 import { DomainError, member, PolicyEngine, LocalMemoryStore, resolveContact, planTask, planAppTask, phoneBinding, PHONE_APPS, enableLifecycle, id, now, log } from './core.mjs';
 
 const definitions = {
+  phone_agent_prepare: ['화면을 관찰하며 실행할 목표와 단계·시간·토큰 예산의 승인 요청. 지원 목표는 글씨 크기, 문자 초안(전송 금지), 알람. contactId는 조회한 연락처만. 승인 전 실행 금지.', agentScopeSchema],
   respond: ['답변 또는 확인 질문. 실제 실행을 했다고 주장하지 마세요.', object({ text: string(1800) })],
   draft_prepare: ['장보기·일정의 로컬 텍스트 초안만 준비. 실제 주문·예약·달력 변경은 지원하지 않음.', object({ kind: choice(['shopping', 'calendar']), body: string(1000) })],
   memory_search: ['memory.search: 동의한 본인 기억만 검색.', object({ query: string(300) })],
@@ -25,11 +27,12 @@ export function availableTools(s, actor, env) {
     if (env.MOLLA_ALLOW_ANDROID_APPS === '1') names.push('phone_app_open');
     if (env.MOLLA_ALLOW_ANDROID_COMPOSE === '1' && me.scopes.includes('message')) names.push('phone_sms_compose');
     if (env.MOLLA_ALLOW_ANDROID_UI === '1') {
+      if (env.MOLLA_ALLOW_ANDROID_AGENT === '1') names.push('phone_agent_prepare');
       names.push('phone_screen_inspect');
       if (lastInspection(s, actor)) names.push('phone_navigation_step');
     }
   }
-  return names.map(name => ({ type: 'function', function: { name, description: definitions[name][0], strict: true, parameters: definitions[name][1] } }));
+  return names.map(name => ({ type: 'function', function: { name, description: definitions[name][0], strict: name !== 'phone_agent_prepare', parameters: definitions[name][1] } }));
 }
 export function lastInspection(s, actor) {
   return s.tasks.find(t => t.owner === actor && t.status === 'completed' && t.evidence?.kind === 'screen_inspected' && Date.parse(t.evidence.capturedAt) > Date.now() - 60000);
@@ -40,6 +43,7 @@ function customTask(s, actor, text, title, action, kind) {
   s.tasks.unshift(task); return task;
 }
 export function planTool(s, actor, request, name, args, env) {
+  if (name === 'phone_agent_prepare') return prepareAgentTask(s, actor, args, env);
   const device = phoneBinding(actor, env); let task;
   if (name === 'phone_app_open') task = planAppTask(s, actor, { text: request, appId: args.appId, device }).task;
   else if (name === 'phone_sms_compose') {
@@ -95,7 +99,7 @@ export class Agent {
           const result = name === 'memory_search' ? new LocalMemoryStore(state).recall(actor, { query: args.query }).slice(0, 10).map(m => ({ text: m.text, source: m.source, version: m.version })) : state.contacts.filter(c => c.owner === actor && [c.id, c.name, c.relation].includes(args.query)).map(c => { contactsRead.add(c.id); return { contactId: c.id, name: c.name, relation: c.relation }; });
           messages.push({ role: 'assistant', content: null, tool_calls: [call] }, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) }); continue;
         }
-        if (name === 'phone_sms_compose' && !contactsRead.has(args.contactId)) throw new DomainError('등록된 연락처 조회 없이 문자를 준비할 수 없어요.', 409);
+        if ((name === 'phone_sms_compose' || name === 'phone_agent_prepare' && args.goal === 'sms_draft') && !contactsRead.has(args.contactId)) throw new DomainError('등록된 연락처 조회 없이 문자를 준비할 수 없어요.', 409);
         return store.transaction(s => {
           if (privacyVersion(s, actor) !== version) throw new DomainError('권한이 변경되었어요.', 409);
           const currentNames = availableTools(s, actor, this.getPhoneEnv(s)).map(t => t.function.name);

@@ -6,6 +6,7 @@
 
 | 기능 | 구현·검증 |
 |---|---|
+| 제한된 화면 에이전트 | [Observe → Reason → Act → Verify 구현](bounded-android-agent.md). 설정 글씨 크기·문자 초안·알람 가상 UI 통과. 새 루프의 실제 Letsur/VM 검증 미실행, 기본 꺼짐 |
 | React Native iOS/Android 앱 | 타입 검사와 JS·리소스 export 통과. APK/IPA 설치는 미검증 |
 | Letsur 모델 | 기본 `gpt-6.1-terra`, 추론 `medium`. 실제 한국어 응답·승인 대기 초안 검증. `live/terra-model-smoke-report.json` |
 | Vercel Gateway 모델 | 실제 `openai/gpt-5-mini` 응답·초안·중복 요청 방지 검증. `live/gateway-model-smoke-report.json` |

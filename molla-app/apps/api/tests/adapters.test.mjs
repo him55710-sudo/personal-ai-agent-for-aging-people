@@ -5,6 +5,15 @@ import { AndroidExecutor, parseScreen } from '../src/android.mjs';
 import { phoneBinding } from '../src/core.mjs';
 
 const modelEnv = { MOLLA_LLM_ENABLED: '1', MOLLA_LLM_BASE_URL: 'https://provider.example/v1', MOLLA_LLM_API_KEY: 'SECRET_TEST_KEY', MOLLA_LLM_MODEL: 'test' };
+
+test('Terra tool request uses the reserved completion budget and reports missing usage as unknown', async () => {
+  let body;
+  const provider = new CompatibleProvider({ env: { ...modelEnv, MOLLA_LLM_MODEL: 'gpt-6.1-terra', LETSUR_REASONING_EFFORT: 'medium' }, fetcher: async (_, opts) => {
+    body = JSON.parse(opts.body); return new Response(JSON.stringify({ choices: [{ finish_reason: 'tool_calls', message: { tool_calls: [{ id: 'x', type: 'function', function: { name: 'android_step', arguments: '{}' } }] } }] }));
+  } });
+  const result = await provider.complete({ messages: [], tools: [], maxOutputTokens: 512 });
+  assert.equal(body.max_completion_tokens, 512); assert.equal(body.max_tokens, undefined); assert.equal(body.reasoning_effort, 'medium'); assert.equal(result.usage.inputTokens, undefined);
+});
 test('connection failure is distinct from invalid model output and never retried', async () => {
   let calls = 0;
   const provider = new CompatibleProvider({ env: modelEnv, fetcher: async () => { calls++; throw new TypeError('fetch failed', { cause: { code: 'ENOTFOUND' } }); } });

@@ -9,8 +9,36 @@ import { digest } from '../src/storage.mjs';
 import { fingerprint, execute, decide } from '../src/core.mjs';
 import { planTool } from '../src/agent.mjs';
 import { apiRequest } from '../../mobile/src/services/runtime.ts';
+import { fixtureAndroid } from './fixtures/bounded-ui.mjs';
 
 const call = (name, args) => ({ call: { id: randomUUID(), type: 'function', function: { name, arguments: JSON.stringify(args) } }, model: 'fixture/model', provider: 'fixture', usage: {} });
+
+test('bounded agent HTTP approval fixes goal/budgets; owner-only execution records verified fixture result', async t => {
+  const android = fixtureAndroid('font'); let turns = 0;
+  const f = await fixture(t, { runner: android.runner, env: { MOLLA_ALLOW_ANDROID_AGENT: '1' }, provider: { complete: async () => ++turns === 1
+    ? call('phone_agent_prepare', { goal: 'font_size', targetScale: 1.15, maxSteps: 4, maxSeconds: 30, maxTokens: 20000 })
+    : { ...call('android_step', { operation: 'font_set', elementId: '', reason: 'Apply the approved scale' }), usage: { inputTokens: 100, outputTokens: 20 } } } });
+  await f.ready();
+  const task = (await f.request('mom', '/chat', { text: '글씨 크기를 1.15배로 바꿔줘', requestId: randomUUID() })).body.task;
+  assert.equal(task.action.execution, 'android-agent'); assert.equal(android.commands.length, 0);
+  assert.equal((await f.request('dad', '/task/decision', { id: task.id, decision: 'approve', expectedActionHash: task.approvalHash })).status, 404);
+  assert.equal((await f.request('mom', '/task/decision', { id: task.id, decision: 'approve', expectedActionHash: task.approvalHash })).status, 200);
+  await Promise.all([...f.app.jobs]);
+  const done = (await f.request('mom', '/state')).body.tasks[0];
+  assert.equal(done.status, 'completed'); assert.equal(done.evidence.verified, true); assert.equal(done.agentReport.steps[0].facts.fontScale, 1.15);
+  assert.equal(done.agentReport.usage.outputTokens, 20); assert(!JSON.stringify(done).includes('fixture-mom'));
+  assert.equal((await f.request('mom', '/task/decision', { id: task.id, decision: 'approve', expectedActionHash: task.approvalHash })).status, 409);
+});
+
+test('changed bounded budget requires fresh approval; parallel Android work cannot be approved', async t => {
+  const f = await fixture(t, { env: { MOLLA_ALLOW_ANDROID_AGENT: '1' } }); await f.ready();
+  const make = () => f.store('mom').transaction(s => planTool(s, 'mom', 'font', 'phone_agent_prepare', { goal: 'font_size', targetScale: 1.15, maxSteps: 4, maxSeconds: 30, maxTokens: 20000 }, f.env));
+  const first = make(), reviewed = fingerprint(first);
+  f.store('mom').transaction(s => { s.tasks.find(x => x.id === first.id).action.scope.maxSteps = 5; });
+  assert.equal((await f.request('mom', '/task/decision', { id: first.id, decision: 'approve', expectedActionHash: reviewed })).status, 409);
+  const second = make(); f.store('mom').transaction(s => { s.tasks.find(x => x.id === first.id).status = 'executing'; });
+  assert.equal((await f.request('mom', '/task/decision', { id: second.id, decision: 'approve', expectedActionHash: fingerprint(second) })).status, 409);
+});
 async function fixture(t, { provider = { complete: async () => call('respond', { text: '안녕하세요. 무엇을 도와드릴까요?' }) }, runner, env: overrides = {}, cloudCall } = {}) {
   const dir = mkdtempSync(resolve(tmpdir(), 'molla-api-'));
   const tokens = Object.fromEntries(['mom', 'dad', 'son'].map(id => [id, randomBytes(32).toString('base64url')]));

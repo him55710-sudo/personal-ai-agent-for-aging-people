@@ -9,6 +9,7 @@ import { validateRequest } from './schema.mjs';
 import { Agent, availableTools } from './agent.mjs';
 import { modelStatus } from './provider.mjs';
 import { AndroidExecutor } from './android.mjs';
+import { BoundedAndroidAgent } from './bounded-agent.mjs';
 import { CloudVMManager, cloudMappings, phoneRuntime, runtimePhoneEnv, vmLimits } from '../../../server/cloud-vm.mjs';
 import { PhoneScreenService } from '../../../server/phone-screen.mjs';
 import { FamilyLinks } from './family.mjs';
@@ -115,6 +116,7 @@ export function createApi({ env = process.env, provider, cloudCall, runner, data
       } else if (path === '/task/decision') {
         const t = s.tasks.find(t => t.id === input.id && t.owner === actor);
         if (!t) throw new DomainError('내 작업을 찾을 수 없어요.', 404);
+        if (input.decision === 'approve' && t.action.execution.startsWith('android-') && (svc.androidBusy || s.tasks.some(other => other.id !== t.id && other.action.execution.startsWith('android-') && ['approved', 'executing', 'verifying', 'running'].includes(other.status)))) throw new DomainError('다른 Android 작업이 실행 중이에요. 먼저 중단하거나 완료를 기다려 주세요.', 409);
         if (input.decision === 'approve' && (!input.expectedActionHash || input.expectedActionHash !== fingerprint(t))) throw new DomainError('검토한 작업 내용이 바뀌었어요. 다시 확인하고 승인해 주세요.', 409);
         return publicTask(decide(s, actor, t.id, input.decision));
       } else if (path === '/contacts') {
@@ -136,13 +138,16 @@ export function createApi({ env = process.env, provider, cloudCall, runner, data
     if (path === '/consent' && input.value === 'revoked' || path === '/preferences' && !input.scopes.includes('phone')) revokePhone(actor, svc);
     if (path === '/task/decision' && input.decision === 'approve') {
       const task = store.read().tasks.find(t => t.id === input.id);
-      const executor = task.action.execution.startsWith('android-') ? new AndroidExecutor(actor, { getEnv: () => runtimePhoneEnv(store.read(), env), ...(runner ? { runner } : {}) }) : task.action.execution === 'memory' ? {
+      const executor = task.action.execution === 'android-agent' ? new BoundedAndroidAgent(actor, { getEnv: () => runtimePhoneEnv(store.read(), env), provider,
+        record: report => store.transaction(s => { s.tasks.find(t => t.id === input.id).agentReport = report; }), ...(runner ? { runner } : {}) }) : task.action.execution.startsWith('android-') ? new AndroidExecutor(actor, { getEnv: () => runtimePhoneEnv(store.read(), env), ...(runner ? { runner } : {}) }) : task.action.execution === 'memory' ? {
         execute: async (action, hooks) => {
           hooks.authorize(); const memory = store.transaction(s => new LocalMemoryStore(s).remember(actor, { text: action.body })); hooks.verifying();
           return { kind: 'memory_written', verified: true, memoryId: memory.id, summary: '승인한 기억을 내 저장소에 남겼어요.' };
         },
       } : new LocalDraftExecutor();
-      schedule(() => execute(store, actor, input.id, { executor, guard, env }));
+      const androidJob = task.action.execution.startsWith('android-');
+      if (androidJob) svc.androidBusy = true;
+      schedule(async () => { try { await execute(store, actor, input.id, { executor, guard, env }); } finally { if (androidJob) svc.androidBusy = false; } });
     }
     return result;
   }

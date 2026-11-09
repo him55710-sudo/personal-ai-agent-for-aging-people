@@ -49,6 +49,8 @@ Phone Harness setup: run `node ../../scripts/setup-phone-harness.mjs`, install i
 
 ## Contracts and guarantees
 
+The opt-in [bounded Android agent](../../docs/bounded-android-agent.md) adds `phone_agent_prepare` and a fixed-budget Observe → Reason → Act → Verify loop. `MOLLA_ALLOW_ANDROID_AGENT=1` is required in addition to existing device/owner permissions. Three versioned profiles cover font size, SMS drafts without Send, and alarms. These new profiles have fixture verification only; actual provider/VM compatibility remains unverified.
+
 All `/api/*` calls require a server-verified bearer credential. The request cannot choose actor, owner, serial, session, tool command or policy. Each owner's personal state is in a separate SQLite database. `family-links.sqlite` contains relationship metadata only. One API process owns a data directory; horizontal scaling requires a coordinated execution queue/lease service and is intentionally refused by the process lock.
 
 GET `/runtime`, `/state`, `/phone/screen`. POST `/chat`, `/consent`, `/ai/consent`, `/preferences`, `/task/decision`, `/contacts`, `/phone/quote`, `/phone/start`, `/phone/stop`, `/phone/diagnose`. Additional owner memory/contact deletion routes and family invite/join/decision/request routes are implemented.
