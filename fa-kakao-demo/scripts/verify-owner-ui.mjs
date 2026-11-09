@@ -16,7 +16,7 @@ await page.route('**/api/owner/**',async route=>{
  assert.equal(req.headers().authorization,'Bearer '+token);
  if(path==='/phone/screen'&&++frameRequests===1){await route.fulfill({status:429,json:{error:'Fixture capture already pending'}});return;}
  if(path==='/chat')await new Promise(r=>slowRelease=r);
- const data=path==='/state'?state:path==='/runtime'?{llm:{model:'fixture only',ready:true,consented:true},phone:{state:'fixture',connected:true}}:path==='/phone/capabilities'?{goals:{font_size:{available:true},sms_draft:{available:false,reason:'문자 작성 앱이 없어요.'},alarm:{available:true}}}:path==='/phone/quote'?{quoteId:'fixture-quote',durationMinutes:3,estimatedMaxUsd:.15}:path==='/phone/screen'?{dataUrl:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR4cAAAAASUVORK5CYII=',capturedAt:new Date().toISOString()}:{};
+ const data=path==='/recent'?state:path==='/runtime'?{llm:{model:'fixture only',ready:true,consented:true},phone:{state:'fixture',connected:true}}:path==='/phone/capabilities'?{goals:{font_size:{available:true},sms_draft:{available:false,reason:'문자 작성 앱이 없어요.'},alarm:{available:true}}}:path==='/phone/quote'?{quoteId:'fixture-quote',durationMinutes:3,estimatedMaxUsd:.15}:path==='/phone/screen'?{dataUrl:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR4cAAAAASUVORK5CYII=',capturedAt:new Date().toISOString()}:{};
  await route.fulfill({json:data});
 });
 try{
