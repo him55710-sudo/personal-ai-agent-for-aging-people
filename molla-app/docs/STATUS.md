@@ -1,5 +1,7 @@
 # 구현·검증 상태
 
+**Mobile agent upgrade:** see [`apps/api`](../apps/api/README.md) and [verification](real-agent-verification.md). The legacy Settings/Terra results below do not establish real Kakao/SMS completion for the new API. Additional paid verification was declined; connection repair is covered by offline tests only.
+
 2026-11-09, Asia/Seoul. 노랑·검정 Yellow Buddy 앱 디자인을 유지한 실제 연결 구현이다.
 
 | 기능 | 구현·검증 |
