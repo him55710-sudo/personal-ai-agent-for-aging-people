@@ -1,16 +1,16 @@
-# Mobile API contract
+# Owner API contract
 
 The current owner API is `apps/api`; see its README and `real-agent-verification.md`. All task approvals now include `expectedActionHash` from `Task.approvalHash`. Mutations carry `Idempotency-Key`; chat/family requests also carry the same stable `requestId`. The server rejects mismatches and unknown actor/owner/device fields. The older contract below describes compatible routes; the current approval hash is mandatory for execution.
 
 Additional lifecycle states are `created`, `planned`, `approved`, `executing`, `verifying`. Completion requires verified evidence. `prepared` remains a local-text artifact only. Task actions include a safe device label and server-assessed risk; raw session IDs and ADB serials are not returned. Family invite/join/decision/request routes grant request-only access with explicit parent acceptance, never shared account administration.
 
-The native client connects to the Molla HTTP JSON API implemented in `server/`. This repository includes its code, not provider credentials or deployed accounts. The independent `molla-cli` package does not provide these HTTP routes. See `STATUS.md` for verified boundaries and unfinished device/deployment work.
+The shared HTTP client at `client/runtime.ts` is used by headless verification. The [current owner API](../apps/api/README.md) and the compatibility implementation in `server/` run separately from the [Cheese KakaoTalk mockup](../../fa-kakao-demo/README.md), the repository's product UI. The independent `molla-cli` package does not serve these routes. See [verification status](STATUS.md).
 
 ## Identity and transport
 
-Every private request sends `Authorization: Bearer <owner-app-token>` to the exact configured HTTPS origin. Tokens identify the owner on the server; the client never sends an actor override. Native credentials use Expo SecureStore. Browser review credentials remain in memory. The owner obtains an app token from the backend operator, not from a model provider.
+Every private request sends `Authorization: Bearer <owner-app-token>` to the exact configured HTTPS origin. Tokens identify the owner on the server; the client never sends an actor override. The owner obtains an access key from the backend operator and supplies it directly to their authorized client.
 
-`GET /api/runtime` and `GET /api/state` must agree on the authenticated owner. Normal builds require `runtime.mode='live'`. An explicitly enabled recording build can accept `local-demo` only with `simulation:true` and a loopback server; it is not a production fallback. Model processing and memory sharing require separate consent.
+`GET /api/runtime` and `GET /api/state` must agree on the authenticated owner. Live verification requires `runtime.mode='live'`. Model processing and memory sharing require separate consent.
 
 ## Endpoints
 
@@ -23,7 +23,7 @@ Every private request sends `Authorization: Bearer <owner-app-token>` to the exa
 | `POST /api/chat` | `{text,requestId}` | Reply and optional reviewable task; UUID deduplicates retries |
 | `POST /api/preferences` | `{agentName,scopes}` | Owner preferences; `phone` scope gates Android actions |
 | `POST /api/contacts` | `{name,relation,phone}` | Owner-scoped contact |
-| `POST /api/task/decision` | `{id,decision:'approve'|'reject'|'cancel'}` | Applies the reviewed decision; client refreshes state |
+| `POST /api/task/decision` | `{id,decision:'approve'|'reject'|'cancel',expectedActionHash}` | Applies the reviewed decision; client refreshes state |
 | `POST /api/phone/quote` | `{durationMinutes}` | `{quoteId,durationMinutes,estimatedMaxUsd,expiresAt}` |
 | `POST /api/phone/start` | `{quoteId}` | Explicitly accepted, owner-scoped start; no automatic retry |
 | `POST /api/phone/stop` | `{}` | Stop owner's running session |
@@ -36,6 +36,6 @@ Every private request sends `Authorization: Bearer <owner-app-token>` to the exa
 
 ## Verification
 
-Screen capture requires active owner consent and phone scope, binds to the owner's current device, rechecks identity/permissions after capture and rate limits requests. The client polls only while its viewer is open and foregrounded; it clears failed/stale private images. This is periodic capture, not streaming video or arbitrary touch control.
+Screen capture requires active owner consent and phone scope, binds to the owner's current device, rechecks identity/permissions after capture and rate limits requests. The endpoint returns a fresh still image and metadata to an authorized caller.
 
-Run `pnpm test:runtime`, `pnpm verify:live`, and `pnpm verify:ui` from `apps/mobile`. Runtime tests exercise a temporary local HTTP server; UI tests intercept a named test origin with synthetic data. They never require or demonstrate a real model or VM. Release integration requires backend deployment, reachable HTTPS, owner tokens, configured providers and real-device testing.
+From `molla-app`, run `node --test tests/client-runtime.test.mjs` and `node scripts/verify-live-server.mjs`. Both use temporary local servers. For actual model or VM checks, use the bounded procedures in [verification](real-agent-verification.md).

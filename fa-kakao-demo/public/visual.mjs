@@ -41,7 +41,8 @@ export function avatar(id, size = 42, expression = 'profile') {
   const p = people[id];
   if (!p) return '';
   if (id === 'fa') {
-    return `<img class="avatar" src="/cheese/${expression}.svg" width="${size}" height="${size}" alt="" aria-hidden="true">`;
+    const file = expression === 'profile' ? 'profile.png' : `${expression}.svg`;
+    return `<img class="avatar" src="/cheese/${file}" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   }
   const drawing = `<path d="M3 41c1-8 7-12 17-12s16 4 17 12" fill="${p.ink}"/><path d="M17 25h6v7l-3 2-3-2z" fill="${p.skin}"/><path d="M10.5 18c0-6 4-9 9.5-9s9.5 3 9.5 9v4c0 5-4 8-9.5 8s-9.5-3-9.5-8z" fill="${p.skin}"/>${p.drawing}<path d="M16 22h.1m7.9 0h.1m-5.4 3.5q1.3 1.2 2.6 0" stroke="#53372e" fill="none" stroke-width="1.25" stroke-linecap="round"/>`;
   return `<svg class="avatar" aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 40 40" style="background:${p.color}">${drawing}</svg>`;

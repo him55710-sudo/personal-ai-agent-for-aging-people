@@ -1,4 +1,4 @@
-name: Owner API and mobile contracts
+name: Owner API and runtime contracts
 on:
   pull_request:
   push:
@@ -29,7 +29,3 @@ jobs:
         working-directory: molla-app
       - run: node --test tests/*.test.mjs
         working-directory: molla-app
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-        working-directory: molla-app/apps/mobile
-      - run: pnpm typecheck && pnpm test:runtime
-        working-directory: molla-app/apps/mobile

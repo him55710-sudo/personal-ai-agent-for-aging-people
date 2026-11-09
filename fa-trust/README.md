@@ -73,7 +73,7 @@ FA_JUDGE=claude npm run demo   # Claude가 심판 (ANTHROPIC_API_KEY 필요)
 
 - **파일 하나면 돼요**: `npm run build`로 만든 [`dist/fa-trust.js`](dist/fa-trust.js) (139 KB, 의존성 포함). AirDrop으로 보내서 UI 프로젝트에 넣고 `import { FamilyTrust } from './fa-trust.js'` 하면 끝이에요.
 - **TypeScript 프로젝트라면** `src/` 폴더를 통째로 복사하고 `npm i @noble/curves @noble/hashes` 하면 타입까지 그대로 쓸 수 있어요.
-- **브라우저 동작 확인**: `npm run serve` 후 http://localhost:8790/examples/browser.html 을 여세요. 버튼 3개(구독 해지 / 보이스피싱 / 사칭범 승인)로 실제 브라우저에서 돌아가는 걸 볼 수 있어요 ([예제 코드](examples/browser.html)).
+- **브라우저 시연**: [치즈 카카오톡 데모](../fa-kakao-demo/README.md#보안-장면-fa-trust)의 가족 채팅에서 치즈 프로필을 열면 보안 상태와 기록을 확인할 수 있어요.
 
 ## UI에 붙이기 (카톡 목업)
 

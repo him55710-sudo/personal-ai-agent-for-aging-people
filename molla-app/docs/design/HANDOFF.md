@@ -1,5 +1,7 @@
 # Yellow Buddy — native design handoff
 
+> Archived design handoff. Paths below describe the former mobile frontend. The current product UI is the [Cheese KakaoTalk mockup](../../../fa-kakao-demo/README.md).
+
 2026-11-09. Supporting the main chat “노인 AI 에이전트 기획 구현”. The user explicitly authorized sharing responsibilities and results.
 
 ## Approval and integration status
@@ -15,7 +17,7 @@ The user approved Yellow Buddy on 2026-11-09 and requested a merge into `him5571
 - `apps/mobile/src/screens/`: conversation, discovery, task and profile layouts.
 - `apps/mobile/src/App.tsx`: conversation first, four labelled capsule tabs, preserved authentication and owner-consent gates.
 - `docs/design/screenshots/yellow/`, `yellow-review.json`: current visual evidence.
-- `docs/design/archive/`: superseded Cloud Letter documents. The root-level older screenshots and `directions.html` are historical studies, not the current approved direction.
+- `docs/design/archive/`: superseded Cloud Letter documents. The retained screenshots are historical studies. The standalone direction comparison page has been retired.
 
 ## Integration boundary
 

@@ -8,7 +8,7 @@ import { createApi } from '../src/server.mjs';
 import { digest } from '../src/storage.mjs';
 import { fingerprint, execute, decide } from '../src/core.mjs';
 import { planTool } from '../src/agent.mjs';
-import { apiRequest } from '../../mobile/src/services/runtime.ts';
+import { apiRequest } from '../../../client/runtime.ts';
 
 const call = (name, args) => ({ call: { id: randomUUID(), type: 'function', function: { name, arguments: JSON.stringify(args) } }, model: 'fixture/model', provider: 'fixture', usage: {} });
 async function fixture(t, { provider = { complete: async () => call('respond', { text: '안녕하세요. 무엇을 도와드릴까요?' }) }, runner, env: overrides = {}, cloudCall } = {}) {
@@ -60,7 +60,7 @@ test('owner auth is expiring, revocable, bearer-only; tenants have separate SQLi
   f.records.owners[0].expiresAt = '2000-01-01T00:00:00Z'; writeFileSync(f.authFile, JSON.stringify(f.records));
   assert.equal((await f.request('mom', '/state')).status, 401);
 });
-test('mobile HTTP client -> API -> tool planner -> approved VM fixture -> verified mobile state', async t => {
+test('shared HTTP client -> API -> tool planner -> approved VM fixture -> verified state', async t => {
   const android = androidRunner(); let calls = 0;
   const f = await fixture(t, { runner: android.runner, provider: { complete: async () => { calls++; return call('phone_app_open', { appId: 'kakao' }); } } });
   await f.ready(); const credentials = { baseUrl: f.origin, token: f.tokens.mom }, requestId = randomUUID();

@@ -31,7 +31,7 @@
 
 ## 장면 2 · 0:20–0:32 · 해결 (얼굴 → 화면)
 
-**화면:** 0:24쯤 컷. 아들(승빈) 화면에서 `우리 가족` 방 → `FA 초대` → `추가`. FA 인사말이 뜨는 순간까지. 구석에 작은 캡션 `KakaoTalk UI: mockup`.
+**화면:** 0:24쯤 컷. 아들 화면에서 `우리 가족` 방 → 방 이름 아래 참여자 수 → `대화상대 초대하기` → `치즈` → `확인`. 치즈 인사말이 뜨는 순간까지. 구석에 작은 캡션 `KakaoTalk UI: mockup`.
 
 **말 (EN):** So we built FA, a family AI agent that lives in the group chat our parents already use. I invite it into our family KakaoTalk room. Mom installs nothing.
 
@@ -46,8 +46,6 @@
 4. 아들 화면: `엄마 구독 목록 보기` → `티빙 해지 요청`. 실행 대상이 `엄마의 VM`으로 표시되는 부분 확대
 5. 엄마 화면: `해지 승인하기` → FA 결과 카드가 가족톡에 올라옴
 
-fa-engine 쪽 UI로 찍는다면: 구독 4건·월 40,090원 카드 → 왓챠·운세 선택 → 엄마 `[네, 해지해 주세요]` → `매달 17,300원 절약`. 금액은 화면에 뜨는 숫자를 그대로 두고 말로는 읽지 않아요.
-
 **말 (EN):** I type: "Mom, let's clean up your subscriptions." Only Mom's own phone can link her account. Her password never shows up in the chat, or on my phone. FA finds the subscriptions she never uses. I pick them, and Mom gets one big button: "Yes, cancel it." One tap, done, and the whole family watched it happen.
 
 **뜻 (KR):** "엄마 구독 좀 정리해줘"라고 보냅니다. 엄마 계정은 엄마 폰에서만 연결할 수 있어요. 비밀번호는 채팅에도, 제 폰에도 나타나지 않아요. FA가 엄마가 안 쓰는 구독을 찾아내고, 제가 고르면 엄마 폰에 큰 버튼 하나가 떠요. "네, 해지해 주세요." 한 번 누르면 끝이고, 그 과정을 온 가족이 봤어요.
@@ -56,7 +54,7 @@ fa-engine 쪽 UI로 찍는다면: 구독 4건·월 40,090원 카드 → 왓챠·
 
 **화면 순서:**
 1. 아빠 화면: `엄마의 계좌에서 50만원만 내 계좌로 옮겨줘` → 🔒 카드 (엄마 + 승빈 승인 필요, 아빠는 승인 불가). 카드 확대 2초
-2. 보이스피싱: fa-trust 브라우저 예제 (`cd fa-trust && npm run serve` → http://localhost:8790/examples/browser.html)에서 `보이스피싱` 버튼 → 보류 → 가족 알림 → 증거 봉인 → 잠금 로그가 흐르는 화면. 카톡 UI에 붙였다면 그 화면으로 대체. 터미널 `npm run demo`로 찍어도 돼요.
+2. 보이스피싱: [치즈 카카오톡 데모](../../fa-kakao-demo/README.md#보안-장면-fa-trust)의 가족 채팅에서 보이스피싱 의심 요청을 보냅니다. 보류와 가족 알림을 보여주고, 치즈 프로필을 열어 증거 봉인과 잠금 기록을 확인합니다.
 
 **말 (EN):** Now, money. Dad asks FA to move 500,000 won from Mom's account to his. Locked. Money needs the owner plus one more family member, ⟦and whoever receives it can't approve it⟧. Then a "prosecutor" calls Mom: move three million won to a safe account, don't tell your family. FA holds the transfer, alerts the family, and seals the evidence. Scams win by isolation. An agent in the family chat breaks it by design.
 
@@ -93,7 +91,7 @@ fa-engine 쪽 UI로 찍는다면: 구독 4건·월 40,090원 카드 → 왓챠·
 
 | 시각 | 할 일 |
 |---|---|
-| ~13:40 | **화면 녹화 먼저.** 데모 상태 초기화(`시연 안내 → 처음부터 다시 시연` / fa-engine은 `POST /api/reset`). 브라우저 확대 125~150%, 북마크 바 숨김, 알림 끄기. 장면 2~4를 말 없이, 천천히, 한 번에 녹화. 실수하면 그 장면만 다시 |
+| ~13:40 | **화면 녹화 먼저.** 데모 상태 초기화(`시연 안내 → 처음부터 다시 시연`). 브라우저 확대 125~150%, 북마크 바 숨김, 알림 끄기. 장면 2~4를 말 없이, 천천히, 한 번에 녹화. 실수하면 그 장면만 다시 |
 | ~13:55 | **얼굴 촬영.** 폰 가로, 창문 빛 마주 보고, 장면 1과 6을 각각 2테이크. 대본은 카메라 바로 아래에 |
 | ~14:05 | **내레이션 녹음.** 조용한 구석에서 폰 음성 메모로 장면 2~5를 한 번에. 화면 영상을 보면서 읽으면 길이가 맞아요 |
 | ~14:15 | **편집 (CapCut 또는 iMovie).** 얼굴 → 화면 → 슬라이드 → 얼굴 순으로 붙이고, 영어 자동 자막을 켠 뒤 고유명사(FA, KakaoTalk, Shamir)만 손봐요. 자막은 발음이 걱정될 때 가장 큰 보험이에요 |
