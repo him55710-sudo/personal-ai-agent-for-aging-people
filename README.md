@@ -8,6 +8,8 @@
 
 카카오톡형 가족 채팅 화면은 `fa-kakao-demo`에서 실행해요. Node.js 22.13 이상이면 별도 패키지 설치 없이 열 수 있어요.
 
+Windows에서는 저장소의 **`Start-Cheese.cmd`를 더블클릭**하면 같은 Cheese 화면이 열려요. PowerShell에서는 `& '.\Start-Cheese.ps1'`을 실행하세요. 기존 Cheese 서버가 실행 중이면 그대로 사용해요. 다른 포트는 `-Port 4174`, 브라우저 없이 시작하려면 `-NoBrowser`를 붙이면 돼요. [실행 안내와 검증 기록](docs/CHEESE-SCREEN-HANDOFF.md)
+
 ```sh
 cd fa-kakao-demo
 npm start
