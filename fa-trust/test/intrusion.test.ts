@@ -118,6 +118,38 @@ test('hacking: tick() notices audit tampering even without a request', async () 
   assert.ok(destroyed(events));
 });
 
+test('a write waiting for the judge cannot execute after self-destruct, even if the family has unlocked', async () => {
+  for (const unlockBeforeResume of [false, true]) {
+    let entered!: () => void;
+    let resume!: () => void;
+    const judgeEntered = new Promise<void>((resolve) => { entered = resolve; });
+    const resumeJudge = new Promise<void>((resolve) => { resume = resolve; });
+    let executions = 0;
+    const { trust, mom, son } = setup({
+      judge: async () => {
+        entered();
+        await resumeJudge;
+        return { verdict: 'pass', risk: 0, reasons: [], signals: [], model: 'test' };
+      },
+      executor: () => {
+        executions++;
+        return '시연용 영수증';
+      },
+    });
+    const pending = trust.request(mom, { owner: 'mom', kind: 'order', amountKRW: 3_000, text: '시연용 쌀 주문' });
+    await judgeEntered;
+    await trust.submit({ requester: 'stranger', owner: 'mom', kind: 'transfer', amountKRW: 50_000 });
+    assert.equal(trust.frozen, true);
+    if (unlockBeforeResume) assert.equal(await trust.unlockWith([mom, son]), true);
+    resume();
+
+    const result = await pending;
+    assert.equal(result.status, 'blocked');
+    assert.equal(result.request.text, undefined);
+    assert.equal(executions, 0);
+  }
+});
+
 test('contamination: instructions aimed at the AI or a router mismatch self-destruct; fraud does not', async () => {
   const fraud = setup({ judge: heuristicJudge });
   await fraud.trust.remember('기억', 'son');
