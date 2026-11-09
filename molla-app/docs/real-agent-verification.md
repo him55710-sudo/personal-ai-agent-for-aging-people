@@ -1,6 +1,6 @@
 # Real agent upgrade verification
 
-Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, synchronized with main `23572ff` before the PR, and merged main `78eb74a` for the connection repair follow-up. Verification date: 2026-11-09.
+Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, synchronized with main `23572ff` before the PR, and integrated main through `58a56e8` for the connection repair follow-up. Verification date: 2026-11-09.
 
 ## Implemented
 
@@ -18,14 +18,14 @@ Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, syn
 | --- | --- |
 | New owner API, tool adapter, Android evidence and mobile HTTP integration | 18/18 pass |
 | Python Phone Harness receipt/recovery adapter | 8/8 pass |
-| Existing server/policy/phone/screen tests | 69/69 pass after latest main merge |
+| Existing server/policy/phone/screen tests | 71/71 pass after latest main merge |
 | Mobile TypeScript | pass |
 | Mobile HTTP runtime | 5/5 pass |
 | React Native Web UI flows | 9 checks pass; mocked API, not live provider evidence |
 | Mobile web export | pass |
-| `fa-kakao-demo` at initial base `23572ff` | 27/27 pass |
-| `fa-engine` | 26/26 pass |
-| `fa-trust` at initial base `23572ff` | 52/52 pass (`node --import tsx --test test/*.test.ts`) |
+| `fa-kakao-demo` after latest main merge | 34/34 pass |
+| `fa-engine` including family ontology | 39/39 pass |
+| `fa-trust` after latest main merge | 61/61 pass (`node --import tsx --test test/*.test.ts`) |
 | Standalone CLI on Windows | 23/25 pass, same two baseline failures: POSIX mode assertion and Windows symlink creation permission |
 | Linux GitHub Actions | pass: original CLI suite, new API, Python adapter, existing server, mobile TypeScript and HTTP runtime |
 

@@ -35,6 +35,13 @@ class RecoveryTests(unittest.TestCase):
             return {"id": "session-one", "request_key": "request-key-123456", "cleanup_complete": False}
         self.cloud._api = api
         self.assertEqual(worker.run({"operation": "stop", "phoneId": "saved-mom", "sessionId": "session-one", "requestId": "request-key-123456"})["state"], "closing")
+    def test_released_receipt_without_cleanup_stays_closing(self):
+        receipt = {"id": "session-one", "request_key": "request-key-123456", "state": "released", "cleanup_complete": False}
+        self.cloud._api = lambda *a, **k: receipt
+        request = {"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456"}
+        self.assertEqual(worker.run(request)["state"], "closing")
+        receipt["cleanup_complete"] = True
+        self.assertEqual(worker.run(request)["state"], "stopped")
     def test_other_profile_is_rejected(self):
         self.cloud._api = lambda *a, **k: {"id": "session-one", "profile_id": "saved-dad", "state": "ready"}
         self.assertEqual(worker.run({"operation": "status", "phoneId": "saved-mom", "sessionId": "session-one"})["code"], "session_owner_mismatch")
@@ -46,9 +53,6 @@ class RecoveryTests(unittest.TestCase):
         self.cloud._api = api
         self.cloud._session_record = lambda *a, **k: self.fail("Cleanup must not connect ADB")
         self.assertEqual(worker.run({"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456", "connect": False})["state"], "ready")
-    def test_released_without_cleanup_confirmation_remains_closing(self):
-        self.cloud._api = lambda *a, **k: {"id": "session-one", "request_key": "request-key-123456", "state": "released", "cleanup_complete": False}
-        self.assertEqual(worker.run({"operation": "recover", "phoneId": "saved-mom", "requestId": "request-key-123456"})["state"], "closing")
     def test_transient_read_retries_once_but_post_never_retries(self):
         calls = []
         def api(method, path, **kwargs):
