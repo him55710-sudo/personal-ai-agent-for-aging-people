@@ -67,11 +67,20 @@ export class Tenants {
 }
 
 export function rateLimit(store, limit = 120) {
-  store.transaction(s => {
-    s.rate = (s.rate ?? []).filter(t => t > Date.now() - 60000);
-    if (s.rate.length >= limit) throw new DomainError('요청이 많아요. 잠시 후 다시 시도해 주세요.', 429);
-    s.rate.push(Date.now());
-  });
+ const db = store.db, cutoff = Date.now() - 60000;
+ db.exec('BEGIN IMMEDIATE');
+ try {
+  db.exec('CREATE TABLE IF NOT EXISTS api_rate(at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS api_rate_at ON api_rate(at); CREATE TABLE IF NOT EXISTS api_rate_migration(id INTEGER PRIMARY KEY)');
+  if (!db.prepare('SELECT id FROM api_rate_migration WHERE id=1').get()) {
+   const state = store.read(), add = db.prepare('INSERT INTO api_rate(at) VALUES(?)');
+   for (const at of state.rate ?? []) if (Number.isSafeInteger(at) && at > cutoff) add.run(at);
+   if (state.rate?.length) { state.rate = []; db.prepare('UPDATE state SET data=? WHERE id=1').run(JSON.stringify(state)); }
+   db.prepare('INSERT INTO api_rate_migration(id) VALUES(1)').run();
+  }
+  db.prepare('DELETE FROM api_rate WHERE at<=?').run(cutoff);
+  if (db.prepare('SELECT COUNT(*) AS n FROM api_rate').get().n >= limit) throw new DomainError('요청이 많아요. 잠시 후 다시 시도해 주세요.', 429);
+  db.prepare('INSERT INTO api_rate(at) VALUES(?)').run(Date.now()); db.exec('COMMIT');
+ } catch (error) { db.exec('ROLLBACK'); throw error; }
 }
 export async function receipt(store, key, path, input, work) {
   if (!/^[A-Za-z0-9_-]{8,100}$/.test(key || '')) throw new DomainError('요청 식별자가 필요해요.', 400);

@@ -1,4 +1,4 @@
-const allowedGet = new Set(['/runtime', '/state', '/phone/screen']);
+const allowedGet = new Set(['/runtime', '/state', '/recent', '/phone/screen']);
 const allowedPost = new Set(['/chat', '/consent', '/ai/consent', '/preferences', '/task/decision', '/phone/quote', '/phone/start', '/phone/stop', '/phone/diagnose', '/contacts']);
 export async function proxyOwner(request, response, path, origin, env) {
   const reply = (status, body) => { response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); response.end(JSON.stringify(body)); };
