@@ -34,13 +34,13 @@ export function HomeScreen({ navigation }: BottomTabScreenProps<TabParams, 'Home
         <View style={[styles.categoryIcon, { backgroundColor: category === id ? colors.accent : colors.quiet }]}><Icon size={24} color={category === id ? colors.accentInk : colors.ink} strokeWidth={1.8} /></View>
         <Copy variant="caption" style={{ fontWeight: category === id ? '700' : '400' }}>{label}</Copy>
       </Pressable>)}</View>
-      <Copy variant="caption" muted style={styles.section}>몰라와 함께 해봐요</Copy>
+      <Copy variant="caption" muted style={styles.section}>치즈와 함께 해봐요</Copy>
       {ideas.filter(idea => category === 'all' || idea.category === category).map(({ icon: Icon, title, description, draft }) => <Pressable key={title} accessibilityRole="button" accessibilityLabel={`${title}. 대화 시작하기`} onPress={() => start(draft)} style={({ pressed }) => [styles.idea, { borderBottomColor: colors.line, opacity: pressed ? .6 : 1 }]}>
         <View style={[styles.ideaIcon, { backgroundColor: colors.quiet }]}><Icon size={23} color={colors.ink} strokeWidth={1.8} /></View>
         <View style={styles.ideaContent}><Copy variant="action" style={styles.ideaTitle}>{title}</Copy><Copy variant="caption" muted style={styles.description}>{description}</Copy><View style={[styles.ask, { backgroundColor: colors.quiet }]}><Copy variant="caption" style={{ fontWeight: '600' }}>이야기하기</Copy><ArrowUpRight size={16} color={colors.ink} /></View></View>
       </Pressable>)}
       {pending > 0 && <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Tasks')} style={[styles.pending, { backgroundColor: colors.accent }]}><Copy variant="action" style={{ color: colors.accentInk, flex: 1 }}>확인을 기다리는 부탁 {pending}개</Copy><ChevronRight color={colors.accentInk} size={20} /></Pressable>}
-      <Pressable testID="start-conversation" accessibilityRole="button" accessibilityLabel="몰라와 이야기하기" onPress={() => start()} style={[styles.freeChat, { backgroundColor: colors.quiet }]}><MessageCircle size={22} color={colors.ink} /><View style={{ flex: 1 }}><Copy variant="action">그냥 수다도 좋아요</Copy><Copy variant="caption" muted>지금 떠오르는 이야기부터.</Copy></View><ChevronRight size={20} color={colors.ink} /></Pressable>
+      <Pressable testID="start-conversation" accessibilityRole="button" accessibilityLabel="치즈와 이야기하기" onPress={() => start()} style={[styles.freeChat, { backgroundColor: colors.quiet }]}><MessageCircle size={22} color={colors.ink} /><View style={{ flex: 1 }}><Copy variant="action">그냥 수다도 좋아요</Copy><Copy variant="caption" muted>지금 떠오르는 이야기부터.</Copy></View><ChevronRight size={20} color={colors.ink} /></Pressable>
       <ErrorNotice message={error} retry={() => void refresh()} />
     </ScrollView>
   </Page>;

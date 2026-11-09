@@ -16,4 +16,4 @@ http.createServer(async (request, response) => {
     response.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     response.end(await readFile(file));
   } catch { response.writeHead(500); response.end('Export the application before starting the preview.'); }
-}).listen(port, '127.0.0.1', () => console.log(`Molla native web review: http://127.0.0.1:${port}`));
+}).listen(port, '127.0.0.1', () => console.log(`Cheese mobile web preview: http://127.0.0.1:${port}`));

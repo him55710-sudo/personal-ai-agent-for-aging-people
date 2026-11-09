@@ -6,12 +6,13 @@ import { messageDraft } from './drafts.mjs';
 import { PHONE_APPS } from './phone.mjs';
 import { activeStatuses, interruptTask, transition } from './lifecycle.mjs';
 export { id, member, own, log, DomainError } from './core.mjs';
+export const DEFAULT_AGENT_NAME='치즈';
 export function seed({live=false}={}){
   const now=new Date().toISOString();
   return migrate({ members: [
-    {id:'mom',name:'엄마',subtitle:'다정한 일상 메이트',color:'peach',initial:'엄',consent:live?'pending':'active',agentName:'몰라',role:'owner',vm:'mom-private',scopes:['shopping','calendar','message']},
-    {id:'dad',name:'아빠',subtitle:'새로운 친구를 기다려요',color:'blue',initial:'아',consent:'pending',agentName:'몰라',role:'owner',vm:'dad-private',scopes:['shopping','calendar','message']},
-    {id:'son',name:'나',subtitle:'우리 가족의 든든한 연결',color:'mint',initial:'나',consent:live?'pending':'active',agentName:'몰라',role:'helper',vm:'son-private',scopes:['shopping','calendar','message']}
+    {id:'mom',name:'엄마',subtitle:'다정한 일상 메이트',color:'peach',initial:'엄',consent:live?'pending':'active',agentName:DEFAULT_AGENT_NAME,role:'owner',vm:'mom-private',scopes:['shopping','calendar','message']},
+    {id:'dad',name:'아빠',subtitle:'새로운 친구를 기다려요',color:'blue',initial:'아',consent:'pending',agentName:DEFAULT_AGENT_NAME,role:'owner',vm:'dad-private',scopes:['shopping','calendar','message']},
+    {id:'son',name:'나',subtitle:'우리 가족의 든든한 연결',color:'mint',initial:'나',consent:live?'pending':'active',agentName:DEFAULT_AGENT_NAME,role:'helper',vm:'son-private',scopes:['shopping','calendar','message']}
   ], tasks:[], messages:[], memories:live?[]:[{id:id(),owner:'mom',text:'짧고 다정하게 이야기하는 걸 좋아해요.',createdAt:now},{id:id(),owner:'mom',text:'생필품을 살 때는 가격을 먼저 알려주세요.',createdAt:now}], connections:[], invites:[], events:[] });
 }
 export function initializeLiveConsent(s){
@@ -40,7 +41,7 @@ export function planTask(s,actor,{owner=actor,text,draft,contactId,execution='lo
    own(actor,owner);
    if(/기억|취향/.test(text)){
     const memories=new LocalMemoryStore(s).recall(actor);
-    return {reply:memories.length?`직접 알려주신 기억이에요.\n${memories.map(m=>`• ${m.text}`).join('\n')}\n몰라의 기억 화면에서 수정하거나 지울 수 있어요.`:'아직 알려주신 기억이 없어요. 몰라의 기억 화면에서 남겨 주세요.',task:null};
+    return {reply:memories.length?`직접 알려주신 기억이에요.\n${memories.map(m=>`• ${m.text}`).join('\n')}\n치즈의 기억 화면에서 수정하거나 지울 수 있어요.`:'아직 알려주신 기억이 없어요. 치즈의 기억 화면에서 남겨 주세요.',task:null};
    }
    return {reply:'네, 듣고 있어요. 지금은 체험 모드예요. “쌀 10kg 주문해줘”, “병원 일정 정리해줘”처럼 부탁해 보세요. 실제 계정 연결 후에는 더 많은 일을 도울 수 있어요.',task:null};
  }
@@ -94,7 +95,7 @@ export function consent(s,actor,value){
  const m=member(s,actor);m.consent=value;m.policyVersion++;
  if(value!=='active')s.memoryGrants=s.memoryGrants.filter(g=>g.owner!==actor);
  if(value!=='active')for(const t of s.tasks)if(t.owner===actor)interruptTask(s,t,'도움 동의가 철회되었어요.');
- log(s,actor,value==='active'?'몰라의 도움을 수락했어요':'몰라의 도움을 중단했어요');
+ log(s,actor,value==='active'?'치즈의 도움을 수락했어요':'치즈의 도움을 중단했어요');
 }
 export function snapshot(s,actor){
  const me=member(s,actor);

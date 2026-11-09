@@ -5,7 +5,7 @@ import { resolve, extname } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
-import { seed,member,own,id,log,planTask,decide,tick,consent,snapshot,DomainError,initializeLiveConsent } from './domain.mjs';
+import { DEFAULT_AGENT_NAME,seed,member,own,id,log,planTask,decide,tick,consent,snapshot,DomainError,initializeLiveConsent } from './domain.mjs';
 import { migrate, graphFor, addContact } from './ontology.mjs';
 import { LocalMemoryStore } from './memory.mjs';
 import { executeTask, recoverTasks, LocalDraftExecutor } from './orchestrator.mjs';
@@ -42,7 +42,7 @@ const server=http.createServer(async(req,res)=>{
    const root=resolve(base,process.env.MOLLA_WEB_ROOT||'dist');const file=resolve(root,'.'+decodeURIComponent(path));
    if(!file.startsWith(root+ (process.platform==='win32'?'\\':'/'))&&file!==root)throw new DomainError('찾을 수 없어요.',404);
    const actual=existsSync(file)&&extname(file)?file:resolve(root,'index.html');
-   if(!existsSync(actual)){res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});return res.end('molla API ready. Open http://127.0.0.1:4317');}
+   if(!existsSync(actual)){res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});return res.end('치즈 API가 준비됐어요. http://127.0.0.1:4317에서 앱을 열어 주세요.');}
    const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ttf':'font/ttf','.woff2':'font/woff2','.json':'application/json'};
    res.writeHead(200,{'Content-Type':mime[extname(actual)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});return res.end(readFileSync(actual));
   }
@@ -109,7 +109,7 @@ const server=http.createServer(async(req,res)=>{
    const m=member(s,actor);m.agentName=bounded(input.agentName,20);
    if(!Array.isArray(input.scopes)||input.scopes.some(v=>!['shopping','calendar','message','phone'].includes(v)))throw new DomainError('잘못된 권한이에요.');
    const nextScopes=[...new Set(input.scopes)];if(JSON.stringify([...m.scopes].sort())!==JSON.stringify([...nextScopes].sort())){m.policyVersion++;for(const t of s.tasks)if(t.owner===actor&&['running','awaiting_approval'].includes(t.status))t.status='cancelled';}
-   stopVM=m.scopes.includes('phone')&&!nextScopes.includes('phone');m.scopes=nextScopes;tick(s);log(s,actor,'몰라 설정을 바꿨어요');
+   stopVM=m.scopes.includes('phone')&&!nextScopes.includes('phone');m.scopes=nextScopes;tick(s);log(s,actor,'치즈 설정을 바꿨어요');
   }
   else if(path==='/api/memories'){
    result=memories.remember(actor,{text:input.text});
@@ -143,7 +143,7 @@ const server=http.createServer(async(req,res)=>{
   else if(path==='/api/invites/accept'){
    if(liveMode())throw new DomainError('운영자에게 새 가족의 개인 접속 코드 발급을 요청해 주세요.',409);
    const inv=s.invites.find(i=>i.code===String(input.code).toUpperCase()&&!i.used&&Date.parse(i.expiresAt)>Date.now());if(!inv)throw new DomainError('초대 코드가 만료되었거나 올바르지 않아요.');
-   const next={id:id(),name:inv.name,initial:inv.name.slice(0,1),color:'peach',consent:'pending',agentName:'몰라',role:'owner',subtitle:'가족이 준비한 작은 친구',vm:id(),scopes:['shopping','calendar','message'],policyVersion:1};s.members.push(next);
+   const next={id:id(),name:inv.name,initial:inv.name.slice(0,1),color:'peach',consent:'pending',agentName:DEFAULT_AGENT_NAME,role:'owner',subtitle:'가족이 준비한 작은 친구',vm:id(),scopes:['shopping','calendar','message'],policyVersion:1};s.members.push(next);
    let family=s.families.find(f=>f.members.includes(inv.createdBy));if(!family){family={id:id(),name:'우리 가족',members:[inv.createdBy]};s.families.push(family);}family.members.push(next.id);
    inv.used=true;save(s);db.prepare('UPDATE sessions SET actor=? WHERE token=?').run(next.id,token);return send(res,200,{ok:true});
   }

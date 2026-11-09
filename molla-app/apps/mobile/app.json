@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "몰라",
+    "name": "Cheese",
     "slug": "molla-companion",
     "scheme": "molla",
     "version": "0.1.0",
@@ -14,7 +14,8 @@
     },
     "web": {
       "bundler": "metro",
-      "name": "몰라 — 내 곁의 작은 AI"
+      "name": "Cheese — 우리 가족 AI",
+      "favicon": "./assets/cheese.png"
     },
     "plugins": [
       "expo-font",

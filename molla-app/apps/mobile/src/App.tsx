@@ -34,7 +34,7 @@ function MainTabs() {
     <Tabs.Screen name="Chat" component={ChatScreen} options={{ title: '대화', tabBarButtonTestID: 'nav-chat', tabBarIcon: ({ color }) => <MessageCircle size={22} color={color} strokeWidth={1.7} /> }} />
     <Tabs.Screen name="Home" component={HomeScreen} options={{ title: '둘러보기', tabBarAccessibilityLabel: '둘러보기', tabBarButtonTestID: 'nav-home', tabBarIcon: ({ color }) => <Compass size={22} color={color} strokeWidth={1.7} /> }} />
     <Tabs.Screen name="Tasks" component={TasksScreen} options={{ title: '부탁', tabBarButtonTestID: 'nav-tasks', tabBarIcon: ({ color }) => <ListChecks size={22} color={color} strokeWidth={1.7} /> }} />
-    <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: '나의 몰라', tabBarButtonTestID: 'nav-profile', tabBarIcon: ({ color }) => <UserRound size={22} color={color} strokeWidth={1.7} /> }} />
+    <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: '나의 치즈', tabBarButtonTestID: 'nav-profile', tabBarIcon: ({ color }) => <UserRound size={22} color={color} strokeWidth={1.7} /> }} />
   </Tabs.Navigator>;
 }
 function Navigation() {
