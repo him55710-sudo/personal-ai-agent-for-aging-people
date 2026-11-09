@@ -6,7 +6,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { createApi } from '../src/server.mjs';
 import { CompatibleProvider } from '../src/provider.mjs';
 import { digest, secureDirectory } from '../src/storage.mjs';
-import { apiRequest } from '../../mobile/src/services/runtime.ts';
+import { apiRequest } from '../../../client/runtime.ts';
 
 const android = process.argv.includes('--android');
 const maxCalls = Number(process.env.MOLLA_CONFIRM_LIVE_MODEL_CALLS), minutes = Number(process.env.MOLLA_VERIFY_VM_MINUTES || 3);

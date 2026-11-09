@@ -1,5 +1,5 @@
 // Opt-in external integration check: uses Gateway credits, synthetic owners and a temporary DB.
-// Run from molla-app: node --env-file=.env apps/mobile/scripts/verify-gateway-model.mjs
+// Run from molla-app: node --env-file=.env scripts/verify-gateway-model.mjs
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
@@ -7,10 +7,10 @@ import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { apiRequest } from '../src/services/runtime.ts';
+import { apiRequest } from '../client/runtime.ts';
 
 if (!process.env.AI_GATEWAY_API_KEY) throw new Error('AI_GATEWAY_API_KEY must be loaded on the server.');
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const folder = await mkdtemp(path.join(tmpdir(), 'molla-gateway-check-'));
 const tokens = { mom: randomBytes(32).toString('base64url'), dad: randomBytes(32).toString('base64url') };
 const authFile = path.join(folder, 'owners.json');
@@ -33,21 +33,21 @@ try {
   await apiRequest(owner, '/consent', { value: 'active' });
   await apiRequest(owner, '/ai/consent', { enabled: true, includeMemories: false });
   checks.push('External AI requires synthetic owner consent; memories excluded');
-  const conversation = { text: '안녕 몰라. 오늘 하루를 시작하는 따뜻한 인사 한 문장 해 줘.', requestId: randomUUID() };
+  const conversation = { text: '안녕 치즈. 오늘 하루를 시작하는 따뜻한 인사 한 문장 해 줘.', requestId: randomUUID() };
   const reply = await apiRequest(owner, '/chat', conversation, { timeoutMs: 45000 });
   assert.equal(reply.model, model); assert.equal(reply.provider, 'vercel'); assert.ok(reply.reply.length > 0); assert.ok(reply.usage.inputTokens > 0); assert.ok(reply.usage.outputTokens > 0); assert.equal(reply.task, null);
   responses.push({ kind: 'conversation', reply: reply.reply, usage: reply.usage });
   assert.deepEqual(await apiRequest(owner, '/chat', conversation), reply);
   const state = await apiRequest(owner, '/state');
   assert.equal(state.messages.length, 2); assert.equal((await apiRequest(other, '/state')).messages.length, 0);
-  checks.push('Mobile HTTP client → real Node server → real Gateway model → persisted Korean reply');
+  checks.push('Shared HTTP client → real Node server → real Gateway model → persisted Korean reply');
   checks.push('Identical request ID reuses the response; another owner cannot read it');
   const draft = await apiRequest(owner, '/chat', { text: '내일 병원에 다녀올게요. 걱정하지 마세요. 이 내용으로 가족에게 보낼 문자 초안을 만들어 줘.', requestId: randomUUID() }, { timeoutMs: 45000 });
   assert.equal(draft.model, model); assert.equal(draft.task?.status, 'awaiting_approval'); assert.equal(draft.task.action.execution, 'local'); assert.ok(draft.task.action.body.length > 0);
   responses.push({ kind: 'message-draft', body: draft.task.action.body, status: draft.task.status, usage: draft.usage });
   checks.push('Real model creates a reviewable draft; no message sent or Android VM started');
   assert.ok((await apiRequest(owner, '/runtime')).llm.verifiedAt);
-  const report = { passed: true, checkedAt: new Date().toISOString(), provider: 'vercel', model, scope: 'Actual mobile HTTP client + actual Node API + external AI Gateway; synthetic owners, temporary DB, no VM or physical device', checks, responses };
+  const report = { passed: true, checkedAt: new Date().toISOString(), provider: 'vercel', model, scope: 'Shared HTTP client + actual Node API + external AI Gateway; synthetic owners, temporary DB, no VM or physical device', checks, responses };
   await mkdir(path.join(root, 'docs/live'), { recursive: true });
   await writeFile(path.join(root, 'docs/live/gateway-model-smoke-report.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));

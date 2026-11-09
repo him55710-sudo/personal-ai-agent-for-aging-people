@@ -8,8 +8,7 @@
     "test": "tsx --test test/*.test.ts",
     "demo": "tsx demo/scenario.ts",
     "typecheck": "tsc --noEmit",
-    "build": "esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=dist/fa-trust.js",
-    "serve": "python3 -m http.server 8790"
+    "build": "esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=dist/fa-trust.js"
   },
   "license": "MIT",
   "dependencies": {

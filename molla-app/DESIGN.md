@@ -1,6 +1,8 @@
 # Molla — Yellow Buddy
 
-Current mobile design · 2026-11-09. Supersedes Cloud Letter after explicit user feedback: brighter, clearer, Pickle-like interaction, yellow and black as the main colors.
+> Archived Yellow Buddy design specification. The current product UI is the [Cheese KakaoTalk mockup](../fa-kakao-demo/README.md).
+
+Design checkpoint · 2026-11-09. Supersedes Cloud Letter after explicit user feedback: brighter, clearer, Pickle-like interaction, yellow and black as the main colors.
 
 ## Product and stack
 

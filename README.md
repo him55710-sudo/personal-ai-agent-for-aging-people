@@ -1,27 +1,19 @@
-# Molla — 부모님을 위한 가족 AI 도우미
+# 치즈 — 부모님을 위한 가족 AI 도우미
 
-부모님이 이미 쓰는 단톡방에 들어가 사는 AI 도우미예요. 자식이 멀리서도 부모님 일을 대신 처리해 드릴 수 있고, 돈이 오가는 일은 가족이 함께 승인해야만 진행돼요. 휴대폰 앱(React Native)과 명령줄 도구(CLI)를 따로 실행할 수 있어요.
+부모님이 이미 쓰는 단톡방에 들어가 사는 AI 도우미예요. 자식이 멀리서도 부모님 일을 대신 처리해 드릴 수 있고, 돈이 오가는 일은 가족이 함께 승인해야만 진행돼요. 제품 화면은 카카오톡형 치즈 가족 채팅 하나예요. 개발용 명령줄 도구(CLI)는 별도로 유지해요.
 
 **한 줄로 말하면:** AI는 "이렇게 할까요?" 하고 제안만 하고, 실제로 할지는 미리 정해 둔 규칙(코드)이 정해요. 그래서 AI가 속아도 돈이 나가지 않아요.
 
-## 모바일 앱 (Yellow Buddy)
+## 치즈 화면 실행
 
-흰색·노랑·검정의 대화 중심 화면이에요. iPhone과 Android에서 도는 진짜 앱(Expo)이고, 웹 페이지를 앱처럼 감싼 게 아니에요.
-
-- [설치와 실행](molla-app/apps/mobile/README.md)
-- [디자인 규칙](molla-app/DESIGN.md)
-- [화면을 어디까지 확인했나](molla-app/docs/design/VERIFICATION.md)
-- [서버와 주고받는 약속](molla-app/docs/live-api-handoff.md)
+카카오톡형 가족 채팅 화면은 `fa-kakao-demo`에서 실행해요. Node.js 22.13 이상이면 별도 패키지 설치 없이 열 수 있어요.
 
 ```sh
-cd molla-app/apps/mobile
-pnpm install --frozen-lockfile
-pnpm start
+cd fa-kakao-demo
+npm start
 ```
 
-앱이 쓰는 서버는 `molla-app/server`에 있어요. 로그인, AI(Letsur 또는 Vercel) 연결, 사람별 기억·허락·승인, Android 폰에서 앱을 여는 기능이 들어 있어요. [서버 설치·실행](molla-app/README.md)과 [지금 확인된 범위](molla-app/docs/STATUS.md)를 보세요. AI 열쇠(API 키), 개인 접속 코드, 실행 기록 저장소는 각자 환경에서 넣어요.
-
-실제 Letsur·Vercel 모델이 한국어로 답하고 할 일 초안을 만드는 것까지 확인했어요. 클라우드에 있는 엄마용 Android 폰 한 대에서 "설정 앱 열어 줘"를 AI가 계획하고, 엄마가 승인하고, 설정 앱이 열리고, 그 화면이 앱에 보이고, 폰을 끄는 것까지 확인했어요. 앱 설치 파일(APK/IPA) 만들기와 실제 개인 휴대폰을 움직이는 건 확인하지 않았어요. [Android 확인 기록](molla-app/docs/live/MOBILE-VERIFICATION.md)
+[치즈 가족 채팅](http://127.0.0.1:4173/)에서 [시연 순서](fa-kakao-demo/README.md)를 따라가세요. 실제 소유자 인증·AI·Android 실행은 별도 [소유자 API](molla-app/apps/api/README.md)에서 검증하고 관리해요. [서버 안내](molla-app/README.md) · [검증 범위](molla-app/docs/STATUS.md)
 
 ## 명령줄 도구 (Molla CLI)
 
@@ -47,7 +39,7 @@ v0.2는 내 컴퓨터의 작은 데이터베이스(SQLite)에 기록하고, 규�
 
 ## 치즈 (FA) 카카오톡 데모
 
-<img src="fa-kakao-demo/public/cheese/profile.svg" width="144" alt="모짜렐라 치즈 모자와 노란 안테나를 단 치즈가 웃는 모습">
+<img src="fa-kakao-demo/public/cheese/profile.png" width="144" alt="모짜렐라 치즈 모자와 노란 안테나를 단 치즈가 웃는 모습">
 
 **치즈**는 가족이 점심으로 함께 먹은 크라이치즈버거에서 이름을 딴, 다정하고 꼼꼼한 우리 가족 AI 도우미예요.
 
@@ -62,7 +54,7 @@ v0.2는 내 컴퓨터의 작은 데이터베이스(SQLite)에 기록하고, 규�
 | 카카오톡 목업 | Node.js 서버와 브라우저 JavaScript로 가족방, 허락 카드, 신뢰 패널을 보여줘요. 구독 요청은 자체 규칙으로 알아듣고, 일반 대화는 원하면 OpenAI 호환 AI 모델을 붙일 수 있어요. [카카오톡 데모](fa-kakao-demo/README.md) |
 | FA 엔진 | 별도 Node.js 서버예요. Claude가 고른 할 일을 정해진 모양으로 받아 규칙 모듈에 넘겨요. 요청한 사람은 서버가 정하고 AI가 바꿀 수 없어요. AI 설정이 없거나 AI 호출이 실패하면 규칙 기반 답으로 넘어가요. 카카오톡 목업은 이 엔진의 규칙 모듈을 가져다 써요. [FA 엔진](fa-engine/README.md) · [Claude 도구 호출](fa-engine/src/agent.js) |
 | 신뢰 코어 (fa-trust) | TypeScript로 만든 보안 심장이에요. 위험 등급, 한국형 사기 신호, 등록된 폰 확인, 열쇠 나누기, 증거 보관을 담당해요. 카카오톡 목업의 송금 장면에 연결돼요. [fa-trust](fa-trust/README.md) |
-| Yellow Buddy | Expo·React Native 휴대폰 앱과 로그인이 있는 Node.js 서버예요. Letsur 또는 Vercel AI Gateway로 한국어 대화와 할 일 초안을 만들고, 주인에게 연결된 Android 폰에서 앱을 열고 화면을 찍어 보여줘요. [모바일 앱](molla-app/README.md) · [확인된 범위](molla-app/docs/STATUS.md) |
+| 소유자·Android API | Node.js 서버가 소유자 인증과 작업 승인을 확인해요. Letsur 또는 Vercel AI Gateway로 한국어 대화와 작업 초안을 만들고, 허용된 Android 실행을 검증해요. [서버 실행](molla-app/README.md) · [확인된 범위](molla-app/docs/STATUS.md) |
 | Molla CLI | Node.js 24 이상과 SQLite로 도는 별도 명령줄 도구예요. 버전이 적힌 JSON 요청을 받아 허용 목록에 있는 일인지 확인하고, 승인 뒤에 실행 명령을 따로 받아요. [CLI](molla-cli/README.md) · [에이전트용 규칙](molla-cli/skills/molla-router/SKILL.md) |
 
 ### 일의 위험도에 따라 승인이 달라져요
@@ -88,7 +80,7 @@ v0.2는 내 컴퓨터의 작은 데이터베이스(SQLite)에 기록하고, 규�
 
 ### 진짜로 되는 것과 보여주기용인 것
 
-규칙·암호 코드와 테스트는 저장소에 있고, Letsur와 Vercel이 실제로 한국어로 답하고 할 일 초안을 만든 기록도 있어요. 카카오톡 화면, 가족 역할, 구독 전용 공간은 연습용 샘플이고, 송금은 초안이나 연습용 영수증에서 끝나요. 모바일 쪽에서는 클라우드 Android 폰 한 대에서 설정 앱 열기, 실제 화면 찍기, 폰 끄기를 확인했어요. [카카오톡 데모 범위](fa-kakao-demo/README.md#llm-설정과-데모-범위) · [모바일 확인 상태](molla-app/docs/STATUS.md)
+규칙·암호 코드와 테스트는 저장소에 있고, Letsur와 Vercel이 실제로 한국어로 답하고 할 일 초안을 만든 기록도 있어요. 카카오톡 화면, 가족 역할, 구독 전용 공간은 연습용 샘플이고, 송금은 초안이나 연습용 영수증에서 끝나요. 이전 서버의 클라우드 Android 검증에서는 설정 앱 전경, 화면 캡처, VM 종료를 확인했어요. 현재 치즈 화면의 작업은 샘플 데이터를 사용해요. [카카오톡 데모 범위](fa-kakao-demo/README.md#llm-설정과-데모-범위) · [실제 연결 검증 범위](molla-app/docs/STATUS.md)
 
 <details>
 <summary>발표 자료: 기술 흐름 그림과 쉬운 보안 설명</summary>
@@ -97,6 +89,6 @@ v0.2는 내 컴퓨터의 작은 데이터베이스(SQLite)에 기록하고, 규�
 
 ![신호등으로 설명하는 위험 등급, 열쇠 세 조각, 폰 확인, 사기 대응, 작업 열쇠 지우기를 그린 한국어 보안 안내](docs/submission/slide/security-overview-ko.png)
 
-중학생 눈높이로 쓴 글 버전은 [docs/submission/SECURITY_EASY.md](docs/submission/SECURITY_EASY.md), 그림판은 [security-easy.png](docs/submission/slide/security-easy.png)에 있어요. 위 그림은 2026-11-09 발표용 요약이고, 정확한 승인 조건과 구현 범위는 이 README의 표가 기준이에요.
+중학생 눈높이로 쓴 글 버전은 [docs/submission/SECURITY_EASY.md](docs/submission/SECURITY_EASY.md), 그림판은 [security-easy.png](docs/submission/slide/security-easy.png)에 있어요. 위 그림은 2026-11-09 당시 구성의 발표 자료예요. 현재 실행 경로와 검증 범위는 위의 표와 실행 안내를 기준으로 삼아요.
 
 </details>

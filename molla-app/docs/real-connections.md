@@ -1,38 +1,19 @@
 # 실제 연결 상태와 사용 방법
 
-2026-11-09 현재 기본 서버는 **Letsur의 gpt-6.1-terra**, 추론 **medium**을 사용한다. 실제 한국어 답변과 메시지 초안을 확인했다. [Terra 요청 설정과 검증](live/TERRA-MODEL.md)에 호환 수정과 응답 시간의 관측 한계를 기록했다. 대역 응답으로 성공 처리하거나 실패 시 다른 공급사로 자동 전환하지 않는다.
+제품 화면은 [카카오톡형 치즈](../../fa-kakao-demo/README.md)에서 실행한다. 아래 절차는 독립 소유자 API와 Android 실행의 운영·검증용이다.
 
-## 이 PC에서 사용하기
+## 로컬 실행
 
-1. **http://127.0.0.1:4318**을 연다. React Native 앱의 로컬 웹 실행 화면이다.
-2. 서버 주소는 이미 입력되어 있다. `.data/owner-access.txt`의 `mom:` 뒤에 있는 개인 앱 접속 코드를 ‘내 앱 연결 키’에 입력한다. **Letsur API 키를 입력하는 칸이 아니다.**
-3. 엄마 공간에서 도움을 수락한다. ‘나의 몰라’에서 ‘AI와 대화하기’를 켜면 실제 모델과 대화할 수 있다. ‘내 기억을 함께 참고하기’는 별도 선택이며 기본으로 꺼져 있다.
-4. Android를 사용하려면 같은 화면에서 ‘내 Android 앱 열기’를 허용하고, 비용·시간 안내를 확인한 뒤 시작한다. 현재 요청대로 VM은 시작하지 않았다.
+1. [소유자 API 안내](../apps/api/README.md)에 따라 개인 접속 키를 발급하고 `molla-app/apps/api`에서 `pnpm start`를 실행한다. 기본 로컬 API 주소는 `http://127.0.0.1:4319`다.
+2. 인증된 HTTP 클라이언트에서 소유자의 접속 키로 `/api/runtime`과 `/api/state`를 확인한다. 실제 모델 키는 서버 설정에만 둔다. [HTTP 계약](live-api-handoff.md)
+3. 소유자가 가족 도움 수락, AI 처리, 기억 사용, Android 권한을 각각 결정한다. 저장형 Android VM을 실행하려면 별도로 시간과 비용이 명시된 견적을 확인하고 승인한다.
 
-아빠와 자녀도 각자의 개인 접속 코드로 대화할 수 있다. 현재 이 두 사용자에게 Android는 배정하지 않았다. 엄마 VM을 공유하지 않는다.
+기존 HTTP 계약을 검증하려면 `molla-app`에서 `pnpm start`로 호환 API(`127.0.0.1:4318`)를 실행한다. `node scripts/verify-live-setup.mjs`는 해당 서버의 읽기 전용 확인에 사용한다. 공개 또는 LAN 배포에는 [소유자 API의 HTTPS 설정](../apps/api/README.md#environment)이 필요하다.
 
-이 주소는 같은 PC의 로컬 실행용이다. 별도 휴대폰에서 연결하려면 네트워크 주소/HTTPS 서버 또는 개발용 연결 설정이 추가로 필요하다. 공개 인터넷 배포나 네이티브 기기 설치 성공을 뜻하지 않는다.
+## 확인한 범위
 
-## 연결 및 검증
+- 호환 API의 Letsur `gpt-6.1-terra`와 추론 `medium`으로 실제 한국어 응답과 메시지 초안을 확인했다. [Terra 요청 설정과 검증](live/TERRA-MODEL.md)
+- 이전 설정 앱 검증은 엄마에게 배정된 저장형 Android에서 전경 앱과 화면 캡처를 확인했고 VM을 종료했다. 당시 아빠·자녀에게 VM은 배정하지 않았다. [이전 실검증](live/MOBILE-VERIFICATION.md)
+- 새 소유자 API에서는 모델 대화를 확인했다. 실제 카카오톡 앱 실행·문자 작성·T world 로그인은 아직 확인되지 않았다. [소유자 API 검증 기록](real-agent-verification.md)
 
-| 부분 | 현재 상태 |
-|---|---|
-| Letsur | 모델 목록 인증 및 실제 한국어 응답·초안 확인 |
-| 가족별 기억·대화 | 토큰으로 사용자 구별, 본인 데이터만 제공 |
-| 동의 | 실제 설치에서는 모두 미동의 상태로 시작; 본인이 수락 |
-| 엄마 Android | Phone Harness 저장형 프로필 배정, 로그인 완료, 정지 상태 |
-| 실제 VM 실행 | 사용자 요청으로 보류; 이 작업에서 실행 비용 없음 |
-| 아빠·자녀 Android | 미배정 |
-| 모델 키 | 서버의 `.env`에만 저장; 모바일 번들 미포함 확인 |
-
-실행 기능은 승인한 앱 열기와 문자 작성 화면 열기까지 구현했다. 문자 자동 전송, 실제 주문·결제·병원 예약은 지원하지 않는다. 실제 VM 위의 앱 실행 성공은 아직 검증하지 않았으므로, 설정 완료와 기기 실행 검증을 구분한다.
-
-읽기 전용 재검사: `node scripts/verify-live-setup.mjs`
-
-서버 재실행: `node --env-file-if-exists=.env server/index.mjs`
-
-앱 변경 후 로컬 실연결 화면 재빌드: `& .\scripts\build-live-local.ps1`
-
-증거: `docs/live/letsur-model-smoke-report.json`, `docs/live/live-setup-report.json`. 서버 로직 테스트 60개 통과. VM 어댑터는 테스트 대역으로 검사했으며, 유료 실제 실행은 하지 않았다.
-
-공식 API 참고: [Letsur 첫 API 호출](https://docs.platform.letsur.ai/ai-gateway/getting-started), [Phone Harness 세션 생성](https://phone-harness.com/docs/api-reference/sessions/create-session).
+공식 API 참고 [Letsur 첫 API 호출](https://docs.platform.letsur.ai/ai-gateway/getting-started) · [Phone Harness 세션 생성](https://phone-harness.com/docs/api-reference/sessions/create-session)

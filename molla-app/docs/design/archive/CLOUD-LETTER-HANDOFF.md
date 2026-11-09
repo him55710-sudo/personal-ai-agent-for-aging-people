@@ -1,5 +1,7 @@
 # Native design handoff
 
+> Archived handoff. The implementation and launch instructions refer to the historical checkout.
+
 2026-11-09 · Supporting the main chat “노인 AI 에이전트 기획 구현”.
 
 **Handoff update:** the main session has begun real-model/VM integration in `apps/mobile/src/services`, `ConnectScreen`, and `RuntimePanel`, and may update the shared providers/navigation next. The checks in `VERIFICATION.md` apply to the identified exported design checkpoint. Preserve the main session's subsequent changes and rerun integration checks against its final source. New `variant="display"` headings need font-subset regeneration, or should use the system-font title variant.

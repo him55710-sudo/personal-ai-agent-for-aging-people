@@ -1,5 +1,7 @@
 # Yellow Buddy — design verification
 
+> Archived Yellow Buddy verification. The screenshots and reports below document the former mobile frontend. The current product UI is the [Cheese KakaoTalk mockup](../../../fa-kakao-demo/README.md).
+
 2026-11-09. Supersedes the earlier Cloud Letter design checkpoint.
 
 Repository integration: the mobile package has its own Playwright dependency and lockfile. Review can run from a fresh checkout without an unpublished parent `package.json`. The included API tests use synthetic fixtures; the API implementation is deployed independently.
@@ -29,7 +31,7 @@ Current machine-readable results: `yellow-review.json` and `../live/ui-contract-
 5. Checked dark-theme yellow surfaces use black text; made selected appearance radio state explicit on the web review surface.
 6. Waited for menu and theme state before capturing, so evidence shows the rendered state rather than a transition frame.
 
-## Reproduction
+## Historical reproduction
 
 From `apps/mobile`, run `pnpm typecheck`, `pnpm export`, and `pnpm preview`. With the static review server on 4323, run `node scripts/verify-live-ui.mjs` and `node scripts/verify-yellow-design.mjs`.
 

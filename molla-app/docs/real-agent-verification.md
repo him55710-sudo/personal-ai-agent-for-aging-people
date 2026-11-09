@@ -2,7 +2,9 @@
 
 The connection repair from `feat/real-agent-mobile-vm` is integrated on main through [PR #24](https://github.com/him55710-sudo/personal-ai-agent-for-aging-people/pull/24); duplicate PR #18 is closed. The final checks below were repeated against main `169e405` on 2026-11-09. This does not change the separate live Android release gates.
 
-## Implemented
+The only current product UI is the [Cheese KakaoTalk mockup](../../fa-kakao-demo/README.md). References below to the earlier mobile UI and its tests describe historical verification. The shared HTTP client now lives at `molla-app/client/runtime.ts` and the API still runs independently.
+
+## Implemented in the verified revision
 
 - `apps/api/src/server.mjs`, `storage.mjs`, `schema.mjs`: authenticated mobile routes, expiring/revocable owner credentials, strict owner identity, separate SQLite files, TLS or trusted loopback proxy, private ACLs, rate limits, durable idempotency receipts and recovery.
 - `apps/api/src/agent.mjs`, `provider.mjs`: real provider adapter, JSON Schema function calls, consented owner memory/contact lookups, finite planning loop and exact-action approval. Unsupported/fabricated tool calls stop execution. Model text cannot invoke ADB or approve a task.
@@ -53,6 +55,6 @@ A second bounded attempt used only the remaining two-minute / US$0.10 allowance 
 
 ## Run / finish verification
 
-See [`apps/api/README.md`](../apps/api/README.md) for variables, credential issuance, TLS, local execution and bounded live test commands. This branch has its own `.env` and owner keys in `apps/api/.data`, separate from the original app's credentials/state. On this PC, use API port 4319 and native-web review port 4325. Parent consent is initially pending; a family member cannot enable it on their behalf.
+See [`apps/api/README.md`](../apps/api/README.md) for variables, credential issuance, TLS, local execution and bounded live test commands. This branch has its own `.env` and owner keys in `apps/api/.data`, separate from the original app's credentials/state. The default local owner API port is 4319. Parent consent starts pending and is granted by the authenticated parent.
 
-Remaining release gates: establish reliable Phone Harness API/ADB connectivity, confirm real cleanup when a receipt is unavailable, run B/C within a fresh approved budget, verify the native installed app, configure public HTTPS, and review owner token delivery and rotation. Main integration covers local and CI contracts. Live Android and T world sign-in remain separate verification gates.
+Remaining live verification: establish reliable Phone Harness API/ADB connectivity, confirm cleanup when a receipt is unavailable, run B/C within a fresh approved budget, verify public HTTPS, and review owner token delivery and rotation. Main integration covers local and CI contracts. Live Android and T world sign-in remain separate verification gates.
