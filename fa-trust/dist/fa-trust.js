@@ -3572,6 +3572,7 @@ var FamilyTrust = class {
   #publicKeys = /* @__PURE__ */ new Map();
   #devices = /* @__PURE__ */ new Map();
   #usedProofs = /* @__PURE__ */ new Set();
+  #acceptedDecisions = /* @__PURE__ */ new Set();
   #actions = /* @__PURE__ */ new Map();
   #shares = /* @__PURE__ */ new Map();
   #links = /* @__PURE__ */ new Map();
@@ -3657,8 +3658,8 @@ var FamilyTrust = class {
   /** Verifies against the ENROLLED public key and refuses replays. */
   verifyProof(memberId, proof, context) {
     const pk = this.#publicKeys.get(memberId);
-    if (!pk) return false;
-    const replayKey = `${memberId}:${proof.R}`;
+    if (!pk || typeof proof?.R !== "string" || !/^(?:02|03)[0-9a-f]{64}$/i.test(proof.R)) return false;
+    const replayKey = `${memberId}:${proof.R.toLowerCase()}`;
     if (this.#usedProofs.has(replayKey)) return false;
     if (!verify(pk, proof, context)) return false;
     this.#usedProofs.add(replayKey);
@@ -3785,7 +3786,11 @@ var FamilyTrust = class {
   }
   async approve(requestId, memberId, proof, share) {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, "approve", requestId))) {
+    const context = this.context(memberId, "approve", requestId);
+    const payload = share ? [share.x, share.y, share.len, share.threshold, share.holder] : [];
+    const retryKey = this.#decisionKey(memberId, context, proof, payload);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append("proof_failed", memberId, "\uC2B9\uC778 \uAE30\uAE30 \uC99D\uBA85 \uC2E4\uD328", { requestId });
       this.#emit(
         "proof_failed",
@@ -3813,6 +3818,7 @@ var FamilyTrust = class {
       this.#emit("info", `\u{1F6AB} ${this.name(memberId)}: ${excluded}`, requestId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (!a.approvals.includes(memberId)) a.approvals.push(memberId);
     if (share) this.#shares.set(requestId, [...this.#shares.get(requestId) ?? [], share]);
     this.audit.append("approval", memberId, `\uC2B9\uC778: ${a.request.summary ?? a.request.kind}`, { requestId });
@@ -3833,12 +3839,16 @@ var FamilyTrust = class {
   }
   async reject(requestId, memberId, proof, opts = {}) {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, "reject", requestId))) {
+    const context = this.context(memberId, "reject", requestId);
+    const retryKey = this.#decisionKey(memberId, context, proof, [Boolean(opts.scam)]);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append("proof_failed", memberId, "\uAC70\uC808 \uAE30\uAE30 \uC99D\uBA85 \uC2E4\uD328", { requestId });
       this.#emit("proof_failed", "\u26A0\uFE0F \uB4F1\uB85D\uB41C \uAE30\uAE30\uAC00 \uC544\uB2CC \uACF3\uC5D0\uC11C \uC628 \uAC70\uC808\uC774\uB77C \uBB34\uC2DC\uD588\uC5B4\uC694.", requestId);
       await this.#onImpostor(a, memberId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (OPEN.includes(a.status)) a.status = "rejected";
     this.#shares.delete(requestId);
     const what = a.request.summary ?? a.request.kind;
@@ -4118,6 +4128,19 @@ var FamilyTrust = class {
     };
   }
   // ───────────────────────── internals ─────────────────────────
+  // A retry of an accepted decision only reads the existing result. Never re-use its proof.
+  // Keep a hash rather than retaining another copy of a device's key share.
+  #decisionKey(memberId, context, proof, payload) {
+    return toHex(sha256(utf8(JSON.stringify([
+      this.keys.epoch,
+      memberId,
+      this.#publicKeys.get(memberId),
+      context,
+      proof?.R,
+      proof?.s,
+      payload
+    ]))));
+  }
   async #progress(a) {
     if (a.status !== "pending" && a.status !== "held") return;
     const d = a.decision;

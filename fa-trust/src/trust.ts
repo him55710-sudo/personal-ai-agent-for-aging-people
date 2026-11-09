@@ -160,6 +160,7 @@ export class FamilyTrust {
   readonly #publicKeys = new Map<MemberId, string>();
   readonly #devices = new Map<MemberId, MemberDevice>();
   readonly #usedProofs = new Set<string>();
+  readonly #acceptedDecisions = new Set<string>();
   readonly #actions = new Map<string, PendingAction>();
   readonly #shares = new Map<string, Share[]>();
   readonly #links = new Map<string, LinkedAccount>();
@@ -261,8 +262,8 @@ export class FamilyTrust {
   /** Verifies against the ENROLLED public key and refuses replays. */
   verifyProof(memberId: MemberId, proof: ZkProof, context: string): boolean {
     const pk = this.#publicKeys.get(memberId);
-    if (!pk) return false;
-    const replayKey = `${memberId}:${proof.R}`;
+    if (!pk || typeof proof?.R !== 'string' || !/^(?:02|03)[0-9a-f]{64}$/i.test(proof.R)) return false;
+    const replayKey = `${memberId}:${proof.R.toLowerCase()}`;
     if (this.#usedProofs.has(replayKey)) return false;
     if (!verify(pk, proof, context)) return false;
     this.#usedProofs.add(replayKey);
@@ -422,7 +423,11 @@ export class FamilyTrust {
 
   async approve(requestId: string, memberId: MemberId, proof: ZkProof, share?: Share): Promise<PendingAction> {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, 'approve', requestId))) {
+    const context = this.context(memberId, 'approve', requestId);
+    const payload = share ? [share.x, share.y, share.len, share.threshold, share.holder] : [];
+    const retryKey = this.#decisionKey(memberId, context, proof, payload);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append('proof_failed', memberId, '승인 기기 증명 실패', { requestId });
       this.#emit(
         'proof_failed',
@@ -450,6 +455,7 @@ export class FamilyTrust {
       this.#emit('info', `🚫 ${this.name(memberId)}: ${excluded}`, requestId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (!a.approvals.includes(memberId)) a.approvals.push(memberId);
     if (share) this.#shares.set(requestId, [...(this.#shares.get(requestId) ?? []), share]);
     this.audit.append('approval', memberId, `승인: ${a.request.summary ?? a.request.kind}`, { requestId });
@@ -477,12 +483,16 @@ export class FamilyTrust {
     opts: { scam?: boolean } = {},
   ): Promise<PendingAction> {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, 'reject', requestId))) {
+    const context = this.context(memberId, 'reject', requestId);
+    const retryKey = this.#decisionKey(memberId, context, proof, [Boolean(opts.scam)]);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append('proof_failed', memberId, '거절 기기 증명 실패', { requestId });
       this.#emit('proof_failed', '⚠️ 등록된 기기가 아닌 곳에서 온 거절이라 무시했어요.', requestId);
       await this.#onImpostor(a, memberId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (OPEN.includes(a.status)) a.status = 'rejected';
     this.#shares.delete(requestId);
     const what = a.request.summary ?? a.request.kind;
@@ -805,6 +815,14 @@ export class FamilyTrust {
   }
 
   // ───────────────────────── internals ─────────────────────────
+
+  // A retry of an accepted decision only reads the existing result. Never re-use its proof.
+  // Keep a hash rather than retaining another copy of a device's key share.
+  #decisionKey(memberId: MemberId, context: string, proof: ZkProof, payload: unknown[]): string {
+    return toHex(sha256(utf8(JSON.stringify([
+      this.keys.epoch, memberId, this.#publicKeys.get(memberId), context, proof?.R, proof?.s, payload,
+    ]))));
+  }
 
   async #progress(a: PendingAction): Promise<void> {
     if (a.status !== 'pending' && a.status !== 'held') return;
