@@ -1,5 +1,9 @@
 # 제출용 초안: FA (Family Agent)
 
+[Final PowerPoint deck](Cheese-IR.pptx) · [49-second narrated demo](Cheese-demo-narrated.mp4)
+
+The demo starts automatically on slide 5 in PowerPoint Slide Show. The clip uses sample accounts and a simulated cancellation.
+
 구글폼(13:30 도착)에 붙여넣을 설명문, GitHub README 첫 화면, 90초 영상 영어 자막 초안이에요.
 `[ ]` 부분만 팀 상황에 맞게 채우세요.
 
