@@ -72,12 +72,12 @@ export class CloudVMManager {
   const s=this.load();s.cloudSessions??={};const expiresAt=typeof data.expiresAt==='number'?new Date(data.expiresAt*1000).toISOString():data.expiresAt??null;
   s.cloudSessions[actor]={phoneId,requestId:s.cloudSessions[actor]?.requestId,sessionId:data.sessionId??null,state:data.state,expiresAt,serial:data.serial??null,checkedAt:now()};log(s,actor,'Android 실행 공간 상태를 확인했어요',data.state);this.save(s);
  }
- async recover(binding,session){
+ async recover(binding,session,{connect=true}={}){
   const matching=session?.phoneId===binding.phoneId;
   if(session&&session.state!=='stopped'&&(!matching||!session.requestId)){
    throw new DomainError('이전 VM의 종료를 확인할 수 없어요. 운영자에게 기존 VM 배정과 실행 기록을 확인해 달라고 요청해 주세요.',409);
   }
-  return this.call({operation:'recover',phoneId:binding.phoneId,requestId:matching?session.requestId:undefined},{env:this.env});
+  return this.call({operation:'recover',phoneId:binding.phoneId,requestId:matching?session.requestId:undefined,connect},{env:this.env});
  }
  async diagnose(actor){return this.locked(actor,async()=>{
   const s=this.load();new PolicyEngine(s).request(actor,actor,'phone');const b=this.assigned(actor),session=s.cloudSessions?.[actor];
@@ -88,7 +88,11 @@ export class CloudVMManager {
  });}
  async stopUnrestricted(actor){
   const s=this.load(),b=this.assigned(actor),session=s.cloudSessions?.[actor];
-  if(!session?.sessionId||session.phoneId!==b.phoneId){const recovered=await this.recover(b,session);this.record(actor,b.phoneId,recovered);if(recovered.state==='stopped')return phoneRuntime(this.load(),actor,this.env);}
+  if(!session?.sessionId||session.phoneId!==b.phoneId){
+   const recovered=await this.recover(b,session,{connect:false});
+   this.record(actor,b.phoneId,recovered);
+   if(recovered.state==='stopped')return phoneRuntime(this.load(),actor,this.env);
+  }
   const current=this.load().cloudSessions[actor];const data=await this.call({operation:'stop',phoneId:b.phoneId,sessionId:current.sessionId,requestId:current.requestId},{env:this.env});this.record(actor,b.phoneId,data);return phoneRuntime(this.load(),actor,this.env);
  }
  async stop(actor){return this.locked(actor,()=>this.stopUnrestricted(actor));}

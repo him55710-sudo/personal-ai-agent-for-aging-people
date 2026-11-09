@@ -5,6 +5,9 @@ import json
 import os
 import re
 import sys
+import time
+import urllib.error
+from http.client import RemoteDisconnected
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +17,19 @@ os.environ["PHONE_HARNESS_TELEMETRY"] = "0"
 os.environ["PHONE_HARNESS_NO_UPDATE_CHECK"] = "1"
 sys.path.insert(0, str(Path(os.environ.get("MOLLA_PHONE_HARNESS_PATH", ROOT.parent / "phone-harness")) / "src"))
 STAGE = "initialization"
+
+
+def request(cloud, method, path, body=None, **kwargs):
+    """Retry only safe reads. Never repeat session creation or device actions."""
+    attempts = 2 if method == "GET" else 1
+    for attempt in range(attempts):
+        try:
+            return cloud._api(method, path, *([body] if body is not None else []), timeout=8 if method == "GET" else 12, **kwargs)
+        except (OSError, RemoteDisconnected, cloud.CloudError) as error:
+            transient = isinstance(error, (OSError, RemoteDisconnected)) or getattr(error, "status", None) in (502, 503, 504)
+            if not transient or attempt + 1 == attempts:
+                raise
+            time.sleep(0.25)
 
 
 def identifier(value):
@@ -30,9 +46,12 @@ def run(data):
         raise ValueError("unsupported_operation")
     if not cloud._bearer(required=False):
         return {"ok": False, "code": "login_required"}
-    STAGE = "catalog"
-    me = cloud._me()
-    catalog = cloud._catalog(me)
+    # Cleanup/status must not depend on an unrelated /me round-trip or working ADB.
+    catalog = []
+    if op in ("catalog", "start"):
+        STAGE = "catalog"
+        me = request(cloud, "GET", "/me")
+        catalog = cloud._catalog(me)
     if op == "catalog":
         return {"ok": True, "sessionLimit": me.get("session_limit"), "phones": [
             {"id": e.get("id"), "label": e.get("label"), "platform": e.get("platform"),
@@ -40,7 +59,7 @@ def run(data):
             for e in catalog
         ]}
     phone_id = identifier(data.get("phoneId"))
-    entries = [e for e in catalog if e.get("id") == phone_id and e.get("platform") == "android" and not e.get("temporary")]
+    entries = [e for e in catalog if e.get("id") == phone_id and e.get("platform") == "android" and not e.get("temporary")] if op == "start" else [{"id": phone_id, "platform": "android", "temporary": False}]
     if len(entries) != 1:
         return {"ok": False, "code": "saved_phone_required"}
     entry = entries[0]
@@ -50,7 +69,7 @@ def run(data):
         if not isinstance(duration, int) or not 60 <= duration <= 300:
             raise ValueError("invalid_duration")
         request_id = identifier(data.get("requestId"))
-        session = cloud._api("POST", "/sessions", cloud._create_body(entry, duration), headers={"Idempotency-Key": request_id})
+        session = request(cloud, "POST", "/sessions", cloud._create_body(entry, duration), headers={"Idempotency-Key": request_id})
     elif op == "recover":
         STAGE = "receipt"
         # Never adopt an unrelated session from the account. Recover only our durable receipt.
@@ -58,7 +77,7 @@ def run(data):
             return {"ok": True, "state": "stopped", "phoneId": phone_id}
         request_id = identifier(data.get("requestId"))
         try:
-            receipt = cloud._api("GET", f"/sessions/requests/{request_id}")
+            receipt = request(cloud, "GET", f"/sessions/requests/{request_id}")
         except cloud.CloudError as error:
             # An unknown timed-out POST is not proof that a session was never created.
             if error.status == 404:
@@ -71,17 +90,17 @@ def run(data):
         if receipt.get("state") == "released":
             return {"ok": True, "state": "closing", "phoneId": phone_id,
                     "sessionId": identifier(receipt.get("id"))}
-        session = cloud._api("GET", f"/sessions/{identifier(receipt.get('id'))}")
+        session = request(cloud, "GET", f"/sessions/{identifier(receipt.get('id'))}")
     else:
         STAGE = "session_status"
         session_id = identifier(data.get("sessionId"))
         try:
-            session = cloud._api("GET", f"/sessions/{session_id}")
+            session = request(cloud, "GET", f"/sessions/{session_id}")
         except cloud.CloudError as error:
             if error.status == 404:
                 if not data.get("requestId"):
                     return {"ok": False, "code": "receipt_unavailable"}
-                receipt = cloud._api("GET", f"/sessions/requests/{identifier(data['requestId'])}")
+                receipt = request(cloud, "GET", f"/sessions/requests/{identifier(data['requestId'])}")
                 if receipt.get("id") != session_id or receipt.get("request_key") != data["requestId"]:
                     return {"ok": False, "code": "session_owner_mismatch"}
                 if receipt.get("cleanup_complete") is True:
@@ -93,12 +112,12 @@ def run(data):
         return {"ok": False, "code": "session_owner_mismatch"}
     if op == "stop":
         STAGE = "release"
-        release = cloud._api("DELETE", f"/sessions/{identifier(session['id'])}")
+        release = request(cloud, "DELETE", f"/sessions/{identifier(session['id'])}")
         stopped = bool(release.get("released")) and not release.get("cleanup_pending")
         return {"ok": True, "state": "stopped" if stopped else "closing", "phoneId": phone_id,
                 "sessionId": None if stopped else session["id"]}
     result = {"ok": True, "phoneId": phone_id, "sessionId": session["id"], "state": session.get("state"), "expiresAt": session.get("expires_at")}
-    if result["state"] == "ready":
+    if result["state"] == "ready" and data.get("connect", True):
         STAGE = "adb_connect"
         record = cloud._session_record(session, selector=phone_id)
         if record["link"]["kind"] != "adb":
@@ -115,7 +134,7 @@ def main():
             result = run(data)
     except BaseException as error:
         # No raw exception/response: either can include temporary viewer/adb credentials.
-        code = getattr(error, "code", None)
+        code = "cloud_network_error" if isinstance(error, (OSError, RemoteDisconnected)) else getattr(error, "code", None)
         result = {"ok": False, "code": code if isinstance(code, str) and re.fullmatch(r"[a-z_]{1,60}", code) else "cloud_request_failed", "stage": STAGE, "httpStatus": getattr(error, "status", None), "errorClass": type(error).__name__}
     print(json.dumps(result))
 

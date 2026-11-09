@@ -160,6 +160,7 @@ export class FamilyTrust {
   readonly #publicKeys = new Map<MemberId, string>();
   readonly #devices = new Map<MemberId, MemberDevice>();
   readonly #usedProofs = new Set<string>();
+  readonly #acceptedDecisions = new Set<string>();
   readonly #actions = new Map<string, PendingAction>();
   readonly #shares = new Map<string, Share[]>();
   readonly #links = new Map<string, LinkedAccount>();
@@ -261,8 +262,8 @@ export class FamilyTrust {
   /** Verifies against the ENROLLED public key and refuses replays. */
   verifyProof(memberId: MemberId, proof: ZkProof, context: string): boolean {
     const pk = this.#publicKeys.get(memberId);
-    if (!pk) return false;
-    const replayKey = `${memberId}:${proof.R}`;
+    if (!pk || typeof proof?.R !== 'string' || !/^(?:02|03)[0-9a-f]{64}$/i.test(proof.R)) return false;
+    const replayKey = `${memberId}:${proof.R.toLowerCase()}`;
     if (this.#usedProofs.has(replayKey)) return false;
     if (!verify(pk, proof, context)) return false;
     this.#usedProofs.add(replayKey);
@@ -296,6 +297,7 @@ export class FamilyTrust {
     auth: { proof?: ZkProof; share?: Share } = {},
     context: RouterContext = {},
   ): Promise<PendingAction> {
+    const epoch = this.keys.epoch;
     const id = req.id ?? this.newRequestId();
     if (this.#actions.has(id)) throw new Error(`duplicate request id ${id}`);
     const request: ActionRequest = { ...req, id };
@@ -333,9 +335,17 @@ export class FamilyTrust {
       judged = { ...verdict, effect: combined.effect };
     }
 
+    const expired = epoch !== this.keys.epoch;
+    if (expired) {
+      decision = blocked('보안 상태가 변경되어 이 요청을 다시 시작해야 해요.', false);
+      judged = undefined;
+      delete request.text;
+      delete request.context;
+    }
+
     // Intrusion (takeover, hacking, contamination) is not fraud against the parent: the system itself
     // may be compromised, so FA refuses this request and then self-destructs (see intrusion.ts).
-    const intrusions = this.#frozen
+    const intrusions = this.#frozen || expired
       ? []
       : intrusionsFrom([
           ...(isMember ? [] : ['not_family']),
@@ -415,14 +425,19 @@ export class FamilyTrust {
       this.#emit('family_alert', `👨‍👩‍👦 가족 전체 알림: ${this.name(request.requester)} 요청 "${what}" → ${state}`, id);
     }
     if (decision.sealEvidence) action.evidenceId = await this.#sealEvidence(action, intrusions);
-    if (intrusions.length > 0) await this.#selfDestruct(intrusions);
-    await this.#progress(action);
+    if (intrusions.length > 0 && epoch === this.keys.epoch) await this.#selfDestruct(intrusions);
+    await this.#progress(action, epoch);
     return action;
   }
 
   async approve(requestId: string, memberId: MemberId, proof: ZkProof, share?: Share): Promise<PendingAction> {
+    const epoch = this.keys.epoch;
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, 'approve', requestId))) {
+    const context = this.context(memberId, 'approve', requestId);
+    const payload = share ? [share.x, share.y, share.len, share.threshold, share.holder] : [];
+    const retryKey = this.#decisionKey(memberId, context, proof, payload);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append('proof_failed', memberId, '승인 기기 증명 실패', { requestId });
       this.#emit(
         'proof_failed',
@@ -450,6 +465,7 @@ export class FamilyTrust {
       this.#emit('info', `🚫 ${this.name(memberId)}: ${excluded}`, requestId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (!a.approvals.includes(memberId)) a.approvals.push(memberId);
     if (share) this.#shares.set(requestId, [...(this.#shares.get(requestId) ?? []), share]);
     this.audit.append('approval', memberId, `승인: ${a.request.summary ?? a.request.kind}`, { requestId });
@@ -458,7 +474,7 @@ export class FamilyTrust {
       `👍 ${this.name(memberId)} 승인 (${a.approvals.length}/${Math.max(1, a.decision.approvalsRequired)}) · 🔐 등록된 폰 확인됨`,
       requestId,
     );
-    await this.#progress(a);
+    await this.#progress(a, epoch);
     return a;
   }
 
@@ -477,12 +493,16 @@ export class FamilyTrust {
     opts: { scam?: boolean } = {},
   ): Promise<PendingAction> {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, 'reject', requestId))) {
+    const context = this.context(memberId, 'reject', requestId);
+    const retryKey = this.#decisionKey(memberId, context, proof, [Boolean(opts.scam)]);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append('proof_failed', memberId, '거절 기기 증명 실패', { requestId });
       this.#emit('proof_failed', '⚠️ 등록된 폰이 아닌 곳에서 온 거절이라 무시했어요.', requestId);
       await this.#onImpostor(a, memberId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (OPEN.includes(a.status)) a.status = 'rejected';
     this.#shares.delete(requestId);
     const what = a.request.summary ?? a.request.kind;
@@ -504,6 +524,7 @@ export class FamilyTrust {
 
   /** Runs scheduled actions that are due and expires linked sessions past their TTL. Call on a timer. */
   async tick(): Promise<void> {
+    const epoch = this.keys.epoch;
     if (!this.#frozen && !this.#auditIntact()) await this.#selfDestruct(intrusionsFrom(['audit_tampered']));
     this.vault.sweep();
     for (const [slot, link] of [...this.#links]) {
@@ -517,9 +538,9 @@ export class FamilyTrust {
         );
       }
     }
-    if (this.#frozen) return;
     for (const a of this.#actions.values()) {
-      if (a.status === 'scheduled' && (a.executeAfter ?? Number.POSITIVE_INFINITY) <= this.#now()) await this.#execute(a);
+      if (this.#frozen || epoch !== this.keys.epoch) return;
+      if (a.status === 'scheduled' && (a.executeAfter ?? Number.POSITIVE_INFINITY) <= this.#now()) await this.#execute(a, epoch);
     }
   }
 
@@ -806,8 +827,25 @@ export class FamilyTrust {
 
   // ───────────────────────── internals ─────────────────────────
 
-  async #progress(a: PendingAction): Promise<void> {
+  // A retry of an accepted decision only reads the existing result. Never re-use its proof.
+  // Keep a hash rather than retaining another copy of a device's key share.
+  #decisionKey(memberId: MemberId, context: string, proof: ZkProof, payload: unknown[]): string {
+    return toHex(sha256(utf8(JSON.stringify([
+      this.keys.epoch, memberId, this.#publicKeys.get(memberId), context, proof?.R, proof?.s, payload,
+    ]))));
+  }
+
+  #mayProceed(a: PendingAction, epoch: number): boolean {
+    if (!OPEN.includes(a.status)) return false;
+    if (epoch === this.keys.epoch && (a.request.kind === 'read' || !this.#frozen)) return true;
+    a.status = 'cancelled';
+    this.#shares.delete(a.id);
+    return false;
+  }
+
+  async #progress(a: PendingAction, epoch: number): Promise<void> {
     if (a.status !== 'pending' && a.status !== 'held') return;
+    if (!this.#mayProceed(a, epoch)) return;
     const d = a.decision;
     if (d.outcome === 'block') return;
     const ownerOk = !d.ownerApprovalRequired || a.approvals.includes(a.request.owner);
@@ -823,10 +861,11 @@ export class FamilyTrust {
       );
       return;
     }
-    await this.#execute(a);
+    await this.#execute(a, epoch);
   }
 
-  async #execute(a: PendingAction): Promise<void> {
+  async #execute(a: PendingAction, epoch: number): Promise<void> {
+    if (!this.#mayProceed(a, epoch)) return;
     const req = a.request;
     const task = this.startTask(req.owner, req.summary ?? req.kind);
     try {
@@ -835,6 +874,7 @@ export class FamilyTrust {
         sessionSecret = await this.#unlockSession(req.owner, req.service, this.#shares.get(a.id) ?? []);
         await task.put('session_use', `${req.service} 세션 사용`);
       }
+      if (!this.#mayProceed(a, epoch)) return;
       const result = await this.#executor(req, { sessionSecret });
       await task.put('result', result);
       a.result = result;
@@ -842,6 +882,7 @@ export class FamilyTrust {
       this.audit.append('executed', 'fa_agent', `${req.kind} 실행`, { requestId: a.id });
       this.#emit('executed', `✅ ${result}`, a.id);
     } catch (e) {
+      if (!this.#mayProceed(a, epoch)) return;
       a.status = 'failed';
       a.result = (e as Error).message;
       this.audit.append('failed', 'fa_agent', `${req.kind} 실패`, { requestId: a.id });

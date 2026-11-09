@@ -1,6 +1,6 @@
 # Real agent upgrade verification
 
-Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, then synchronized with main `23572ff` before the PR. Verification date: 2026-11-09.
+Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, synchronized with main `23572ff` before the PR, and merged main `78eb74a` for the connection repair follow-up. Verification date: 2026-11-09.
 
 ## Implemented
 
@@ -16,16 +16,16 @@ Branch: `feat/real-agent-mobile-vm`. Reused the backend merged at `f7e79de`, the
 
 | Suite | Observed result |
 | --- | --- |
-| New owner API, tool adapter, Android evidence and mobile HTTP integration | 17/17 pass |
-| Python Phone Harness receipt/recovery adapter | 4/4 pass |
-| Existing server/policy/phone/screen tests | 66/66 pass |
+| New owner API, tool adapter, Android evidence and mobile HTTP integration | 18/18 pass |
+| Python Phone Harness receipt/recovery adapter | 8/8 pass |
+| Existing server/policy/phone/screen tests | 69/69 pass after latest main merge |
 | Mobile TypeScript | pass |
 | Mobile HTTP runtime | 5/5 pass |
 | React Native Web UI flows | 9 checks pass; mocked API, not live provider evidence |
 | Mobile web export | pass |
-| `fa-kakao-demo` current main | 27/27 pass |
+| `fa-kakao-demo` at initial base `23572ff` | 27/27 pass |
 | `fa-engine` | 26/26 pass |
-| `fa-trust` current main | 52/52 pass (`node --import tsx --test test/*.test.ts`) |
+| `fa-trust` at initial base `23572ff` | 52/52 pass (`node --import tsx --test test/*.test.ts`) |
 | Standalone CLI on Windows | 23/25 pass, same two baseline failures: POSIX mode assertion and Windows symlink creation permission |
 | Linux GitHub Actions | pass: original CLI suite, new API, Python adapter, existing server, mobile TypeScript and HTTP runtime |
 
@@ -34,6 +34,14 @@ The Windows CLI failures were not hidden or converted into passes. The new API s
 The fixture pipeline uses the actual mobile `apiRequest` implementation, real HTTP API and SQLite, plus controlled model/ADB responses. It verifies that an unapproved action cannot execute, a different owner cannot approve/read it, a changed hash is rejected, a duplicate cannot run twice, cancellation/timeout/restart never invent success, and family helpers cannot inherit parent privileges.
 
 ## Real environment
+
+### Connection repair follow-up — 2026-11-09
+
+The user declined additional billing and requested code-only repair. No VM rental or model generation was made in this follow-up. Free authenticated reads reached Phone Harness `/me` successfully three times, confirmed the one saved Android, and reached Letsur `/models`. An initial GitHub DNS lookup failed and a subsequent fetch succeeded; the host network has shown intermittent failures, so these reads do not establish reliable ADB connectivity.
+
+Code repairs remove `/me` as a dependency of session status/cleanup, skip ADB connection when recovering a session for shutdown, retry only transient GET failures once, and require explicit cleanup confirmation before reporting stopped. LLM network errors now have a distinct safe error code. Live verification supports a separately approved 1–5 minute cap and clearer progress/error reporting; no new allowance is implied. The parent still must install/login to apps where needed, and any future paid verification needs fresh approval.
+
+The request to put the tested code on main does not change the unverified status of scenarios B/C. Latest main changes, including the legacy Terra adapter and FA safeguards, are preserved.
 
 Credentials were loaded from the existing private local configuration. No API key, app token, provider session ID or ADB unlock secret is committed. Read-only account catalog confirms one saved Android profile; only mom is mapped. Dad/son remain unassigned.
 
@@ -47,4 +55,4 @@ A second bounded attempt used only the remaining two-minute / US$0.10 allowance 
 
 See [`apps/api/README.md`](../apps/api/README.md) for variables, credential issuance, TLS, local execution and bounded live test commands. This branch has its own `.env` and owner keys in `apps/api/.data`, separate from the original app's credentials/state. On this PC, use API port 4319 and native-web review port 4325. Parent consent is initially pending; a family member cannot enable it on their behalf.
 
-Remaining release gates: restore reliable Phone Harness API/ADB connectivity, confirm real session cleanup when a receipt is unavailable, run B/C with a fresh explicitly approved budget, test the native installed app, configure public HTTPS, and review token delivery and rotation with the actual owners. Integration into main covers the local and CI contracts. Live Android acceptance still depends on these checks.
+Remaining release gates: establish reliable Phone Harness API/ADB connectivity, confirm real cleanup when a receipt is unavailable, run B/C within a fresh approved budget, verify the native installed app, configure public HTTPS, and review owner token delivery and rotation. Main integration covers local and CI contracts. Live Android and T world sign-in remain separate verification gates.

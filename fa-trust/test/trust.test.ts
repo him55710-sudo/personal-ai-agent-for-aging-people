@@ -71,6 +71,48 @@ test('an impostor phone cannot approve, and a proof cannot be replayed (hold-fir
   assert.equal(trust.verifyProof('mom', proof, ctx), false);
 });
 
+test('an exact approval retry is a no-op, but a changed response with the same nonce still self-destructs', async () => {
+  const { trust, mom, dad, events } = setup();
+  await trust.linkAccount('mom', 'bank', 'demo-bank-session');
+  const a = await trust.request(dad, { owner: 'mom', kind: 'transfer', service: 'bank', amountKRW: 50_000, payeeOwner: 'dad' });
+  const context = trust.context('mom', 'approve', a.id);
+  const proof = mom.prove(context);
+  const share = mom.shareFor('session:mom:bank');
+  assert.ok(share);
+
+  await trust.approve(a.id, 'mom', proof, share);
+  await trust.approve(a.id, 'mom', { ...proof }, { ...share });
+  assert.equal(trust.frozen, false);
+  assert.equal(a.status, 'pending');
+  assert.deepEqual(a.approvals, ['mom']);
+  assert.equal(events.filter(({ type }) => type === 'approval').length, 1);
+  assert.equal(trust.verifyProof('mom', proof, context), false);
+
+  await trust.approve(a.id, 'mom', { ...proof, s: proof.s + '0' }, share);
+  assert.equal(trust.frozen, true);
+  assert.equal(a.status, 'cancelled');
+});
+
+test('an exact rejection retry is a no-op and approval proof retries remain bound to request and epoch', async () => {
+  const { trust, mom, dad, events } = setup();
+  const a = await trust.request(dad, { owner: 'mom', kind: 'transfer', amountKRW: 50_000, payeeOwner: 'dad' });
+  const rejection = mom.prove(trust.context('mom', 'reject', a.id));
+  await trust.reject(a.id, 'mom', rejection);
+  await trust.reject(a.id, 'mom', { ...rejection }, { scam: false });
+  assert.equal(trust.frozen, false);
+  assert.equal(events.filter(({ type }) => type === 'rejected').length, 1);
+
+  const b = await trust.request(dad, { owner: 'mom', kind: 'transfer', amountKRW: 50_000, payeeOwner: 'dad' });
+  const approval = mom.prove(trust.context('mom', 'approve', b.id));
+  await trust.approve(b.id, 'mom', approval);
+  await trust.approve(a.id, 'mom', approval);
+  assert.equal(trust.frozen, true);
+
+  assert.equal(await trust.unlockWith([mom, dad]), true);
+  await trust.approve(b.id, 'mom', approval);
+  assert.equal(trust.frozen, true);
+});
+
 test('beneficiary exclusion: dad asking for mom\'s money to himself needs mom + son, dad never counts', async () => {
   const { trust, mom, dad, son, clock } = setup();
   await trust.linkAccount('mom', 'bank', 'bank-session');

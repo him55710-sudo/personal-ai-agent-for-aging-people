@@ -254,7 +254,7 @@ function evaluate(req, opts = {}) {
   };
 }
 
-// node_modules/@noble/hashes/_u64.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/_u64.js
 var fromNumH = (n) => n / 2 ** 32 | 0;
 var fromNumL = (n) => n >>> 0;
 function setU64FromNum(view, byteOffset, n, isLE) {
@@ -264,7 +264,7 @@ function setU64FromNum(view, byteOffset, n, isLE) {
   view.setUint32(byteOffset + 4, isLE ? h : l, isLE);
 }
 
-// node_modules/@noble/hashes/utils.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/utils.js
 function isBytes(a) {
   return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
 }
@@ -429,7 +429,7 @@ var oidNist = (suffix) => ({
   oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
 });
 
-// node_modules/@noble/hashes/_md.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/_md.js
 function Chi(a, b, c) {
   return a & b ^ ~a & c;
 }
@@ -542,7 +542,7 @@ var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
   1541459225
 ]);
 
-// node_modules/@noble/hashes/sha2.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/sha2.js
 var SHA256_K = /* @__PURE__ */ Uint32Array.from([
   1116352408,
   1899447441,
@@ -916,7 +916,7 @@ async function openEvidence(ev, shares) {
   }
 }
 
-// node_modules/@noble/hashes/hmac.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/hmac.js
 var _HMAC = class {
   oHash;
   iHash;
@@ -993,7 +993,7 @@ var hmac = /* @__PURE__ */ (() => {
   return hmac_;
 })();
 
-// node_modules/@noble/hashes/hkdf.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/hashes/hkdf.js
 var HKDF_COUNTER = /* @__PURE__ */ Uint8Array.of(0);
 var EMPTY_BUFFER = /* @__PURE__ */ Uint8Array.of();
 function expand(hash, prk, info, length = 32, _recycled) {
@@ -1435,7 +1435,7 @@ var ShredVault = class {
   }
 };
 
-// node_modules/@noble/curves/utils.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/utils.js
 function aarray(item, title, inner = () => {
 }) {
   if (!Array.isArray(item))
@@ -1617,7 +1617,7 @@ function validateObject(object, fields = {}, optFields = {}, title = "object") {
   iter(optFields, true);
 }
 
-// node_modules/@noble/curves/abstract/modular.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/abstract/modular.js
 var _0n2 = /* @__PURE__ */ BigInt(0);
 var _1n2 = /* @__PURE__ */ BigInt(1);
 var _2n = /* @__PURE__ */ BigInt(2);
@@ -2079,7 +2079,7 @@ function mapHashToField(key, fieldOrder, isLE = false) {
   return isLE ? numberToBytesLE(reduced, fieldLen) : numberToBytesBE(reduced, fieldLen);
 }
 
-// node_modules/@noble/curves/abstract/curve.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/abstract/curve.js
 var _0n3 = /* @__PURE__ */ BigInt(0);
 var _1n3 = /* @__PURE__ */ BigInt(1);
 var _4n2 = /* @__PURE__ */ BigInt(4);
@@ -2466,7 +2466,7 @@ function createKeygen(randomSecretKey, getPublicKey) {
   };
 }
 
-// node_modules/@noble/curves/abstract/der.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/abstract/der.js
 var _0n4 = /* @__PURE__ */ BigInt(0);
 var DERErr = class extends Error {
   constructor(m = "") {
@@ -2593,7 +2593,7 @@ var DER = /* @__PURE__ */ (() => {
   return Object.freeze(_DER);
 })();
 
-// node_modules/@noble/curves/abstract/weierstrass.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/abstract/weierstrass.js
 var divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n2) / den;
 function _splitEndoScalar(k, basis, n) {
   aInRange("scalar", k, _0n5, n);
@@ -3425,7 +3425,7 @@ function ecdsa(Point2, hash, ecdsaOpts = {}) {
   });
 }
 
-// node_modules/@noble/curves/secp256k1.js
+// ../../family-agent-pr16-review.Jgzrbz/fa-trust/node_modules/@noble/curves/secp256k1.js
 var secp256k1_CURVE = {
   p: BigInt("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"),
   n: BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
@@ -3572,6 +3572,7 @@ var FamilyTrust = class {
   #publicKeys = /* @__PURE__ */ new Map();
   #devices = /* @__PURE__ */ new Map();
   #usedProofs = /* @__PURE__ */ new Set();
+  #acceptedDecisions = /* @__PURE__ */ new Set();
   #actions = /* @__PURE__ */ new Map();
   #shares = /* @__PURE__ */ new Map();
   #links = /* @__PURE__ */ new Map();
@@ -3657,8 +3658,8 @@ var FamilyTrust = class {
   /** Verifies against the ENROLLED public key and refuses replays. */
   verifyProof(memberId, proof, context) {
     const pk = this.#publicKeys.get(memberId);
-    if (!pk) return false;
-    const replayKey = `${memberId}:${proof.R}`;
+    if (!pk || typeof proof?.R !== "string" || !/^(?:02|03)[0-9a-f]{64}$/i.test(proof.R)) return false;
+    const replayKey = `${memberId}:${proof.R.toLowerCase()}`;
     if (this.#usedProofs.has(replayKey)) return false;
     if (!verify(pk, proof, context)) return false;
     this.#usedProofs.add(replayKey);
@@ -3680,6 +3681,7 @@ var FamilyTrust = class {
    * When a judge is configured it reads all of that (plus this audit log) before anything runs.
    */
   async submit(req, auth = {}, context = {}) {
+    const epoch = this.keys.epoch;
     const id = req.id ?? this.newRequestId();
     if (this.#actions.has(id)) throw new Error(`duplicate request id ${id}`);
     const request = { ...req, id };
@@ -3709,7 +3711,14 @@ var FamilyTrust = class {
       decision = combined.decision;
       judged = { ...verdict, effect: combined.effect };
     }
-    const intrusions = this.#frozen ? [] : intrusionsFrom([
+    const expired = epoch !== this.keys.epoch;
+    if (expired) {
+      decision = blocked("\uBCF4\uC548 \uC0C1\uD0DC\uAC00 \uBCC0\uACBD\uB418\uC5B4 \uC774 \uC694\uCCAD\uC744 \uB2E4\uC2DC \uC2DC\uC791\uD574\uC57C \uD574\uC694.", false);
+      judged = void 0;
+      delete request.text;
+      delete request.context;
+    }
+    const intrusions = this.#frozen || expired ? [] : intrusionsFrom([
       ...isMember ? [] : ["not_family"],
       ...isMember && auth.proof !== void 0 && !verified ? ["unverified_device"] : [],
       ...decision.signals.map((s) => s.id),
@@ -3779,13 +3788,18 @@ var FamilyTrust = class {
       this.#emit("family_alert", `\u{1F468}\u200D\u{1F469}\u200D\u{1F466} \uAC00\uC871 \uC804\uCCB4 \uC54C\uB9BC: ${this.name(request.requester)} \uC694\uCCAD "${what}" \u2192 ${state}`, id);
     }
     if (decision.sealEvidence) action.evidenceId = await this.#sealEvidence(action, intrusions);
-    if (intrusions.length > 0) await this.#selfDestruct(intrusions);
-    await this.#progress(action);
+    if (intrusions.length > 0 && epoch === this.keys.epoch) await this.#selfDestruct(intrusions);
+    await this.#progress(action, epoch);
     return action;
   }
   async approve(requestId, memberId, proof, share) {
+    const epoch = this.keys.epoch;
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, "approve", requestId))) {
+    const context = this.context(memberId, "approve", requestId);
+    const payload = share ? [share.x, share.y, share.len, share.threshold, share.holder] : [];
+    const retryKey = this.#decisionKey(memberId, context, proof, payload);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append("proof_failed", memberId, "\uC2B9\uC778 \uAE30\uAE30 \uC99D\uBA85 \uC2E4\uD328", { requestId });
       this.#emit(
         "proof_failed",
@@ -3813,6 +3827,7 @@ var FamilyTrust = class {
       this.#emit("info", `\u{1F6AB} ${this.name(memberId)}: ${excluded}`, requestId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (!a.approvals.includes(memberId)) a.approvals.push(memberId);
     if (share) this.#shares.set(requestId, [...this.#shares.get(requestId) ?? [], share]);
     this.audit.append("approval", memberId, `\uC2B9\uC778: ${a.request.summary ?? a.request.kind}`, { requestId });
@@ -3821,7 +3836,7 @@ var FamilyTrust = class {
       `\u{1F44D} ${this.name(memberId)} \uC2B9\uC778 (${a.approvals.length}/${Math.max(1, a.decision.approvalsRequired)}) \xB7 \u{1F510} \uB4F1\uB85D\uB41C \uD3F0 \uD655\uC778\uB428`,
       requestId
     );
-    await this.#progress(a);
+    await this.#progress(a, epoch);
     return a;
   }
   /** Demo helper: the phone proves and attaches its key share for the session this action needs. */
@@ -3833,12 +3848,16 @@ var FamilyTrust = class {
   }
   async reject(requestId, memberId, proof, opts = {}) {
     const a = this.#get(requestId);
-    if (!this.verifyProof(memberId, proof, this.context(memberId, "reject", requestId))) {
+    const context = this.context(memberId, "reject", requestId);
+    const retryKey = this.#decisionKey(memberId, context, proof, [Boolean(opts.scam)]);
+    if (this.#acceptedDecisions.has(retryKey)) return a;
+    if (!this.verifyProof(memberId, proof, context)) {
       this.audit.append("proof_failed", memberId, "\uAC70\uC808 \uAE30\uAE30 \uC99D\uBA85 \uC2E4\uD328", { requestId });
       this.#emit("proof_failed", "\u26A0\uFE0F \uB4F1\uB85D\uB41C \uD3F0\uC774 \uC544\uB2CC \uACF3\uC5D0\uC11C \uC628 \uAC70\uC808\uC774\uB77C \uBB34\uC2DC\uD588\uC5B4\uC694.", requestId);
       await this.#onImpostor(a, memberId);
       return a;
     }
+    this.#acceptedDecisions.add(retryKey);
     if (OPEN.includes(a.status)) a.status = "rejected";
     this.#shares.delete(requestId);
     const what = a.request.summary ?? a.request.kind;
@@ -3856,6 +3875,7 @@ var FamilyTrust = class {
   }
   /** Runs scheduled actions that are due and expires linked sessions past their TTL. Call on a timer. */
   async tick() {
+    const epoch = this.keys.epoch;
     if (!this.#frozen && !this.#auditIntact()) await this.#selfDestruct(intrusionsFrom(["audit_tampered"]));
     this.vault.sweep();
     for (const [slot, link] of [...this.#links]) {
@@ -3869,9 +3889,9 @@ var FamilyTrust = class {
         );
       }
     }
-    if (this.#frozen) return;
     for (const a of this.#actions.values()) {
-      if (a.status === "scheduled" && (a.executeAfter ?? Number.POSITIVE_INFINITY) <= this.#now()) await this.#execute(a);
+      if (this.#frozen || epoch !== this.keys.epoch) return;
+      if (a.status === "scheduled" && (a.executeAfter ?? Number.POSITIVE_INFINITY) <= this.#now()) await this.#execute(a, epoch);
     }
   }
   // ───────────────────────── linked accounts (2-of-3 custody) ─────────────────────────
@@ -4118,8 +4138,29 @@ var FamilyTrust = class {
     };
   }
   // ───────────────────────── internals ─────────────────────────
-  async #progress(a) {
+  // A retry of an accepted decision only reads the existing result. Never re-use its proof.
+  // Keep a hash rather than retaining another copy of a device's key share.
+  #decisionKey(memberId, context, proof, payload) {
+    return toHex(sha256(utf8(JSON.stringify([
+      this.keys.epoch,
+      memberId,
+      this.#publicKeys.get(memberId),
+      context,
+      proof?.R,
+      proof?.s,
+      payload
+    ]))));
+  }
+  #mayProceed(a, epoch) {
+    if (!OPEN.includes(a.status)) return false;
+    if (epoch === this.keys.epoch && (a.request.kind === "read" || !this.#frozen)) return true;
+    a.status = "cancelled";
+    this.#shares.delete(a.id);
+    return false;
+  }
+  async #progress(a, epoch) {
     if (a.status !== "pending" && a.status !== "held") return;
+    if (!this.#mayProceed(a, epoch)) return;
     const d = a.decision;
     if (d.outcome === "block") return;
     const ownerOk = !d.ownerApprovalRequired || a.approvals.includes(a.request.owner);
@@ -4135,9 +4176,10 @@ var FamilyTrust = class {
       );
       return;
     }
-    await this.#execute(a);
+    await this.#execute(a, epoch);
   }
-  async #execute(a) {
+  async #execute(a, epoch) {
+    if (!this.#mayProceed(a, epoch)) return;
     const req = a.request;
     const task = this.startTask(req.owner, req.summary ?? req.kind);
     try {
@@ -4146,6 +4188,7 @@ var FamilyTrust = class {
         sessionSecret = await this.#unlockSession(req.owner, req.service, this.#shares.get(a.id) ?? []);
         await task.put("session_use", `${req.service} \uC138\uC158 \uC0AC\uC6A9`);
       }
+      if (!this.#mayProceed(a, epoch)) return;
       const result = await this.#executor(req, { sessionSecret });
       await task.put("result", result);
       a.result = result;
@@ -4153,6 +4196,7 @@ var FamilyTrust = class {
       this.audit.append("executed", "fa_agent", `${req.kind} \uC2E4\uD589`, { requestId: a.id });
       this.#emit("executed", `\u2705 ${result}`, a.id);
     } catch (e) {
+      if (!this.#mayProceed(a, epoch)) return;
       a.status = "failed";
       a.result = e.message;
       this.audit.append("failed", "fa_agent", `${req.kind} \uC2E4\uD328`, { requestId: a.id });

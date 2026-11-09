@@ -193,9 +193,9 @@ FA 엔진은 Molla CLI **v0.1**의 HTTP 계약(`molla_session` 쿠키, `/api/sta
 `knowledge.js`가 로그를 가족 지식 그래프로 투영해요. 사실은 주어 · 관계 · 목적어에 출처 이벤트, 주인, 공개 범위, 버전이 붙어요.
 
 - 주인은 자기 사실을 모두 봐요. 행동에서 나온 사실(해지, 주문, 송금, 계정 연결)은 요청한 가족과 `read` 위임을 받은 가족도 봐요. 동의를 끄면 다른 가족은 못 봐요.
-- 직접 남긴 기억은 주인만 보고, Molla의 기억 공유로만 열려요. 수정하면 새 버전이 되고 이전 문구는 로그에서도 지워져요.
+- 직접 남긴 기억은 주인만 보고, Molla의 기억 공유로만 열려요. 수정하거나 삭제하면 이전 문구는 로그와 지식 그래프에서 지워져요.
 - 사실은 권한이 아니에요. `policy.js`는 그래프를 읽지 않아요.
-- Agent LLM은 요청자가 볼 수 있는 사실 최근 20개를 `<family_facts>` 인용 데이터로 받아요.
+- Agent LLM은 방의 모든 사람이 볼 수 있는 사실 중 최근 20개를 `<family_facts>` 인용 데이터로 받아요. 새로 초대되었거나 접근 권한을 잃은 사람에게는 볼 수 없는 사실을 사용한 답변이 표시되지 않아요.
 - 아이디와 비밀번호는 이벤트와 사실 어디에도 들어가지 않아요.
 
 | 메서드 | 경로 | 설명 |
@@ -204,7 +204,7 @@ FA 엔진은 Molla CLI **v0.1**의 HTTP 계약(`molla_session` 쿠키, `/api/sta
 | POST | `/api/knowledge/retract` `{factId}` | 주인이 사실을 잊기 (직접 남긴 기억은 Molla 기억 삭제로) |
 | GET | `/api/knowledge/verify` | 이벤트 로그 해시 체인 검사 |
 
-`family-memory/*.md`는 지식 그래프가 쓰는 GBrain 내보내기 사본이에요(`gbrain import family-memory`). 설계와 gstack 리뷰: [docs/family-ontology-plan.md](../docs/family-ontology-plan.md)
+`family-memory/*.md`에는 사실 종류와 출처 이벤트 같은 메타데이터만 추가해요. 이전 버전의 Markdown이나 GBrain에 남은 원문은 별도로 정리해야 해요. 설계와 gstack 리뷰는 [가족 온톨로지 계획](../docs/family-ontology-plan.md)에 있어요.
 
 ## 파일
 
