@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { once } from 'node:events';
-import { apiRequest, normalizeServerUrl, validateCredentials } from '../src/services/runtime.ts';
+import { apiRequest, normalizeServerUrl, validateCredentials } from '../client/runtime.ts';
 
 test('release connection accepts only HTTPS origins without URL credentials', () => {
   assert.equal(normalizeServerUrl('https://molla.example/'), 'https://molla.example');

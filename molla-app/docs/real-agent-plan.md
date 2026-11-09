@@ -1,5 +1,7 @@
 # Real agent integration plan
 
+> Historical plan. Current runtime instructions are in the [owner API README](../apps/api/README.md).
+
 Initial baseline: main `ade7882`, branch `feat/real-agent-mobile-vm`. Main advanced during inspection; the branch fast-forwarded to `f7e79de` before implementation and reused the newly merged legacy backend, provider adapters, screen service and Phone Harness worker. Before PR creation, it also fast-forwarded to `23572ff`, preserving the separate FA/security/design changes and rerunning the changed suites.
 
 1. Reuse `molla-cli/runtime/{policy,domain,memory,phone}` and `lib/{store,execute}`. Keep standalone CLI behavior. Add an explicit durable lifecycle for HTTP-created tasks and conservative recovery after uncertain external effects.

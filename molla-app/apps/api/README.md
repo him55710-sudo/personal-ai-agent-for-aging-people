@@ -1,6 +1,6 @@
 # Molla owner API
 
-The live mobile backend. It imports the **same** `molla-cli` policy, domain, memory, SQLite store and execution core. `molla-app/server` re-exports those modules for legacy compatibility. The older demo server and `fa-kakao-demo` simulations are separate; they are never an execution fallback.
+The authenticated owner and Android execution API. It imports the **same** `molla-cli` policy, domain, memory, SQLite store and execution core. `molla-app/server` re-exports those modules for legacy compatibility. The [Cheese KakaoTalk mockup](../../../fa-kakao-demo/README.md) is the repository's product UI and runs its own simulations. The live API is operated separately.
 
 ## Run locally
 
@@ -19,7 +19,7 @@ pnpm start
 
 The operator issues each owner a separate 256-bit credential; only its SHA-256 hash and 30-day expiry enter `owners.json`. Issuing a replacement revokes previous keys for that owner. `pnpm owner revoke mom` revokes all mom credentials. Raw keys are stored only in private `.data/<owner>-access.txt` for direct delivery to that owner, never a URL/family chat. API keys are not app credentials. Windows uses a private directory ACL; Unix uses mode 0700/0600. The API has no demo login or cookie fallback.
 
-Then in `../mobile`: `pnpm install --frozen-lockfile`, `pnpm start`. Enter the API HTTPS origin and that owner's app key. Development HTTP is allowed only for loopback (`localhost`, `127.0.0.1`, Android emulator `10.0.2.2`). Native public/LAN builds require HTTPS. Owner acceptance, AI processing, memory use by AI, Android permission, VM cost acceptance and individual task approval are distinct decisions.
+Use the exact API origin and the owner's key with an authenticated HTTP client. Development HTTP is limited to loopback, while public or LAN use requires HTTPS. Owner acceptance, AI processing, memory use by AI, Android permission, VM cost acceptance and individual task approval are distinct decisions.
 
 ## Environment
 
@@ -65,7 +65,7 @@ App opening verifies the foreground package. SMS completion requires a supported
 
 ## Family ownership
 
-The parent generates a 10-minute, one-use **relationship code**. The helper claims it; the parent then explicitly accepts request-only access in their own app. Linking does not share memory, contacts, conversations, credentials or results. Family requests are planned in the parent's private store, and the helper receives only a receipt. Only the parent can approve that exact plan. Revocation immediately blocks new requests and cancels pending ones. This live path does not inherit the simulated finance/subscription actions in the FA demos.
+The parent generates a 10-minute, one-use **relationship code**. The helper claims it; the parent then explicitly accepts request-only access through their own authenticated session. Linking does not share memory, contacts, conversations, credentials or results. Family requests are planned in the parent's private store, and the helper receives only a receipt. Only the parent can approve that exact plan. Revocation immediately blocks new requests and cancels pending ones. This live path does not inherit the simulated finance/subscription actions in the FA demos.
 
 ## Verification
 
@@ -74,7 +74,7 @@ pnpm test                         # fixtures only, no billing
 python tests/cloud_worker_test.py # receipt/cleanup API fixtures
 ```
 
-Live tests are separate and need explicit authorization. `scripts/verify-live.mjs --android` uses actual model requests and a saved VM, ephemeral private owner state and the mobile HTTP client. It requires `MOLLA_CONFIRM_LIVE_MODEL_CALLS` (1..6), `MOLLA_VERIFY_VM_MINUTES` (1..5), and matching `MOLLA_CONFIRM_VM_MAX_USD`. Keep a cumulative budget across attempts. It opens Kakao if installed, prepares an SMS to a reserved fictional test number, never sends, and requests shutdown in `finally` and a watchdog. The provider's deadline limits the rental even if this process dies. It does not prove APK/IPA rendering or a public HTTPS deployment.
+Live tests are separate and need explicit authorization. `scripts/verify-live.mjs --android` uses actual model requests and a saved VM, ephemeral private owner state and the shared HTTP client in `../../client/runtime.ts`. It requires `MOLLA_CONFIRM_LIVE_MODEL_CALLS` (1..6), `MOLLA_VERIFY_VM_MINUTES` (1..5), and matching `MOLLA_CONFIRM_VM_MAX_USD`. Keep a cumulative budget across attempts. It opens Kakao if installed, prepares an SMS to a reserved fictional test number, never sends, and requests shutdown in `finally` and a watchdog. The provider's deadline limits the rental even if this process dies. It does not establish a public HTTPS deployment or a real T world sign-in.
 
 Connection recovery retries a transient read at most once (eight-second HTTP timeout per read). Session creation and device effects are never automatically retried. Status/cleanup no longer require a separate catalog lookup, and recovery for shutdown explicitly skips ADB connection. A released receipt without `cleanup_complete` stays `closing`. LLM transport failures are reported as `llm_network_error`, separately from malformed tool output.
 

@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync, readFileSync, existsSync } from 'node:fs';
-import { resolve, extname } from 'node:path';
+import { mkdirSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
@@ -38,19 +38,12 @@ function bounded(v,max=1000){if(typeof v!=='string'||!v.trim()||v.trim().length>
 const server=http.createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');const path=url.pathname;
-  if(!path.startsWith('/api/')){
-   const root=resolve(base,process.env.MOLLA_WEB_ROOT||'dist');const file=resolve(root,'.'+decodeURIComponent(path));
-   if(!file.startsWith(root+ (process.platform==='win32'?'\\':'/'))&&file!==root)throw new DomainError('찾을 수 없어요.',404);
-   const actual=existsSync(file)&&extname(file)?file:resolve(root,'index.html');
-   if(!existsSync(actual)){res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8'});return res.end('치즈 API가 준비됐어요. http://127.0.0.1:4317에서 앱을 열어 주세요.');}
-   const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ttf':'font/ttf','.woff2':'font/woff2','.json':'application/json'};
-   res.writeHead(200,{'Content-Type':mime[extname(actual)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});return res.end(readFileSync(actual));
-  }
+  if(!path.startsWith('/api/'))throw new DomainError('찾을 수 없어요.',404);
   const host=new URL('http://'+(req.headers.host||'localhost')).hostname;
   const hosts=new Set(['localhost','127.0.0.1','[::1]',...(process.env.MOLLA_ALLOWED_HOSTS||'').split(',').filter(Boolean)]);
   if(!hosts.has(host))throw new DomainError('허용된 서버 주소를 사용해 주세요.',403);
   const listeningPort=server.address()?.port;
-  const origins=['http://127.0.0.1:4317','http://localhost:4317',`http://127.0.0.1:${listeningPort}`,`http://localhost:${listeningPort}`,...(process.env.MOLLA_ALLOWED_ORIGINS||'').split(',').filter(Boolean)];
+  const origins=[`http://127.0.0.1:${listeningPort}`,`http://localhost:${listeningPort}`,...(process.env.MOLLA_ALLOWED_ORIGINS||'').split(',').filter(Boolean)];
   if(req.headers.origin&&!origins.includes(req.headers.origin))throw new DomainError('허용되지 않은 요청이에요.',403);
   if(req.headers.origin){res.setHeader('Access-Control-Allow-Origin',req.headers.origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Credentials','true');}
   if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'600'});return res.end();}

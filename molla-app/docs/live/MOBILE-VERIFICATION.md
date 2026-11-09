@@ -1,6 +1,8 @@
 # 실제 API에 연결하는 모바일 앱 검증
 
-작성: 2026-11-09, Asia/Seoul. 제품 대상은 React Native·Expo iOS/Android 앱이다. 브라우저는 화면 검증 수단이다.
+> 이전 독립 React Native 화면과 호환 API의 검증 기록이다. 현재 제품 화면은 [카카오톡형 치즈](../../../fa-kakao-demo/README.md)에서 실행한다.
+
+작성: 2026-11-09, Asia/Seoul. 당시 검증 대상은 React Native·Expo 화면과 연결 API였다.
 
 ## 구현
 
@@ -31,12 +33,12 @@
 
 Vercel Gateway 검증은 실제 외부 모델 API를 호출했다. 두 한국어 요청의 사용량은 합계 입력 935 / 출력 950 토큰이며 임시 DB의 합성 사용자만 사용했다. 실제 가족의 동의를 대신하거나 메시지를 전송하지 않았고 VM도 시작하지 않았다. Gateway 키는 서버 `.env`에만 저장했으며 90일 만료·총 US$5 예산으로 발급했다. `gpt-6.1-sol`은 현재 무료 계정에서 접근 거절되어 사용 가능한 `gpt-5-mini`로 확인했다. 서버 담당이 선택한 기본 Letsur 제공자는 그대로 유지했고 Vercel 검증만 별도 프로세스에서 수행했다.
 
-## 재검증
+## 현재 서버 재검증
 
-`apps/mobile`에서 `pnpm test:runtime`, `node scripts/verify-live-server.mjs`, `pnpm typecheck`를 실행한다. `pnpm export` 후 `pnpm preview`로 검증 서버를 띄우고 `pnpm verify:live`를 실행한다. 기존 `docs/design/`의 체험 모드 결과는 이전 디자인 기준 기록이다.
+`molla-app`에서 `node --test tests/client-runtime.test.mjs`와 `node scripts/verify-live-server.mjs`로 HTTP 계약을 재검증한다. 독립 모바일 UI의 검증 결과는 과거 기록으로 보존한다.
 
-외부 Gateway 재검증은 제품 루트 `molla-app`에서 `node --env-file=.env apps/mobile/scripts/verify-gateway-model.mjs`를 실행한다. 이 명령은 실제 모델 사용량이 발생하므로 일반 테스트 묶음에는 포함하지 않는다.
+외부 Gateway 재검증은 제품 루트 `molla-app`에서 `node --env-file=.env scripts/verify-gateway-model.mjs`를 실행한다. 이 명령은 실제 모델 사용량이 발생하므로 일반 테스트 묶음에는 포함하지 않는다.
 
-최종 실기기 확인: 개인키 저장/삭제, 앱 재실행, 앱 잠금·복귀, 키보드·읽어주기·햅틱, 가족 계정 분리, 네트워크 단절 중 작업 상태, VM 종료/비용, 소유자 직접 로그인과 외부 실행 결과를 확인해야 한다.
+현재 실제 Android 실행과 로그인 검증의 범위는 [소유자 API 검증](../real-agent-verification.md)을 따른다.
 
 2026-11-09 13:10–13:12 KST 실제 VM 검증: 사용자 승인 한도 3분 / US$0.15. 단일 저장형 엄마 Android에서 Letsur `gpt-4.1-mini`가 설정 앱 열기를 계획했고, 승인 후 `com.android.settings` 전경과 720×1280 실제 캡처를 확인했다. 같은 캡처가 앱의 PC 검토 화면에서 디코딩·표시되었다. 시작 요청 약 58초 후 종료 요청, 약 100초 후 종료 확인. VM 크레딧 차감 US$0.05. 최종 활성 세션 0. 실제 휴대폰에 앱을 설치해 검증한 것은 아니다.

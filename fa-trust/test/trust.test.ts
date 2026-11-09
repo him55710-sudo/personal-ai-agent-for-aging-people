@@ -140,6 +140,23 @@ test('a transfer with too few eligible approvers is blocked', async () => {
   assert.equal(a.status, 'blocked');
 });
 
+test('a prohibited loan stays blocked despite valid approvals from every family member', async () => {
+  const { trust, mom, dad, son } = setup();
+  const a = await trust.request(mom, { owner: 'mom', kind: 'loan', amountKRW: 1_000_000, summary: '대출 신청' });
+  assert.equal(a.status, 'blocked');
+  assert.equal(a.decision.tier, 'T3');
+  assert.equal(a.decision.outcome, 'block');
+  const approvals = [...a.approvals];
+
+  await trust.approveWith(mom, a.id);
+  await trust.approveWith(dad, a.id);
+  await trust.approveWith(son, a.id);
+
+  assert.equal(a.status, 'blocked');
+  assert.deepEqual(a.approvals, approvals);
+  assert.equal(a.receipt, undefined);
+});
+
 test('impostor approval (hold-first mode): hold + family alert + sealed evidence, a second attempt self-destructs', async () => {
   const { trust, mom, dad, events } = setup({ impostorStrikeLimit: 2 });
   await trust.linkAccount('mom', 'bank', 'bank-session');
@@ -171,7 +188,7 @@ test('a non-member request is blocked and sealed as evidence', async () => {
 });
 
 test('voice phishing: held + evidence sealed; son flags scam → lockdown shreds sessions, re-keys, blocks; unlock needs 2', async () => {
-  const { trust, mom, dad, son } = setup();
+  const { trust, mom, dad, son, events } = setup();
   await trust.linkAccount('mom', 'coupang', 'cookie=xyz');
   await trust.remember('엄마는 한 달에 한 번 쌀 10kg을 주문해요', 'son');
   const epoch = trust.keys.epoch;
@@ -185,7 +202,9 @@ test('voice phishing: held + evidence sealed; son flags scam → lockdown shreds
     text: '검찰이 안전계좌로 옮기래, 가족한테 말하지 말래',
   });
   assert.equal(scam.status, 'held');
+  assert.equal(scam.decision.coolingOffMinutes, 24 * 60);
   assert.ok(scam.evidenceId);
+  assert.ok(events.some((e) => e.type === 'family_alert' && e.message.includes('사기 의심으로 보류')));
 
   await trust.rejectWith(son, scam.id, { scam: true });
   assert.equal(scam.status, 'rejected');
