@@ -54,11 +54,16 @@ test('Cheese owner bridge runs all three approved fixture goals and shuts down t
     return { status: res.status, body: await res.json() };
   };
   assert((await (await fetch(base)).text()).includes('owner-open'));
+  assert.equal((await request('/phone/capabilities')).status, 403);
+  assert.equal(android.commands.length, 0);
   for (const [path, body] of [['/consent', { value: 'active' }], ['/ai/consent', { enabled: true, includeMemories: false }], ['/preferences', { agentName: '치즈', scopes: ['phone', 'message'] }]]) assert.equal((await request(path, body)).status, 200);
   const quote = await request('/phone/quote', { durationMinutes: 3 });
   assert.equal(quote.body.estimatedMaxUsd, 0.15); assert.equal(cloudCalls.length, 0);
   assert.equal((await request('/phone/start', { quoteId: quote.body.quoteId })).status, 200);
   assert.equal((await request('/runtime')).body.phone.connected, true);
+  const capabilities = await request('/phone/capabilities');
+  assert.equal(capabilities.status, 200);
+  assert(Object.values(capabilities.body.goals).every(result => result.available && !result.executionVerified));
   contactId = (await request('/contacts', { name: '아들', relation: '아들', phone: '01012345678' })).body.id;
   assert(contactId);
   for (goal of ['font_size', 'sms_draft', 'alarm']) {

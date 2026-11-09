@@ -25,7 +25,7 @@ export function fixtureAndroid(initial = 'home', { rejectEffects = false, wrongR
     const command = args.at(-1); commands.push(command);
     if (command === 'dumpsys activity activities') return { stdout: `mResumedActivity: ActivityRecord{12 u0 ${pkg()}/.Main t1}` };
     if (command.startsWith('cat ')) return { stdout: screens[current] };
-    if (command.startsWith('cmd package resolve-activity')) return { stdout: command.includes('SENDTO') ? 'com.android.messaging/.Compose' : 'com.android.deskclock/.HandleApiCalls' };
+    if (command.startsWith('cmd package resolve-activity')) return { stdout: command.includes('SENDTO') ? 'com.android.messaging/.Compose' : command.includes('SET_ALARM') ? 'com.android.deskclock/.HandleApiCalls' : 'com.android.settings/.Settings' };
     if (command === 'settings get system font_scale') return { stdout: String(fontScale) };
     if (command === 'settings get system time_12_24') return { stdout: '24' };
     if (command.startsWith('input ') || command.startsWith('am start') || command.startsWith('settings put')) {

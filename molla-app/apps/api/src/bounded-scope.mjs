@@ -12,7 +12,7 @@ export const agentScopeSchema = object({
   maxTokens: { type: 'integer', minimum: 4000, maximum: 30000 },
 }, ['goal', 'maxSteps', 'maxSeconds', 'maxTokens']);
 const valid = ajv.compile(agentScopeSchema);
-export const profileApps = Object.freeze({ font_size: ['com.android.settings'], sms_draft: ['com.android.messaging', 'com.google.android.apps.messaging', 'com.android.mms'], alarm: ['com.android.deskclock', 'com.google.android.deskclock'] });
+export const profileApps = Object.freeze({ font_size: ['com.android.settings', 'com.android.settings.intelligence'], sms_draft: ['com.android.messaging', 'com.google.android.apps.messaging', 'com.android.mms'], alarm: ['com.android.deskclock', 'com.google.android.deskclock'] });
 export const profileOperations = Object.freeze({ font_size: ['open', 'tap', 'scroll_up', 'scroll_down', 'input', 'back', 'font_set'], sms_draft: ['compose'], alarm: ['set_alarm'] });
 export function prepareAgentTask(s, actor, args, env) {
   if (!valid(args)) throw new DomainError('목표와 단계·시간·토큰 예산을 확인해 주세요.', 400);

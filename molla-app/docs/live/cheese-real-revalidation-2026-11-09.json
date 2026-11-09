@@ -1,0 +1,310 @@
+{
+  "source": "real-letsur-and-phone-harness",
+  "url": "http://127.0.0.1:4173/",
+  "startedAt": "2026-11-09T05:48:10.635Z",
+  "vmCapSeconds": 180,
+  "vmCapUsd": 0.15,
+  "vmStarts": 1,
+  "scenarios": {
+    "font_size": {
+      "status": "needs_verification",
+      "passed": false,
+      "startedAt": "2026-11-09T05:49:09.531Z",
+      "planning": {
+        "model": "gpt-6.1-terra",
+        "provider": "letsur",
+        "usage": {
+          "inputTokens": 983,
+          "outputTokens": 43
+        },
+        "scope": {
+          "goal": "font_size",
+          "targetScale": 1.15,
+          "maxSteps": 6,
+          "maxSeconds": 50,
+          "maxTokens": 30000,
+          "allowedApps": [
+            "com.android.settings"
+          ],
+          "allowedActions": [
+            "open",
+            "tap",
+            "scroll_up",
+            "scroll_down",
+            "input",
+            "back",
+            "font_set"
+          ],
+          "version": 1
+        }
+      },
+      "reason": "승인 앱을 벗어났어요. 새 승인이 필요해요.",
+      "agentReport": {
+        "version": 1,
+        "source": "android-ui-hierarchy",
+        "goal": "font_size",
+        "scopeHash": "6d883e200e3c11b391a701cceb5ad05b44894079e7387cb083f7811fd50a7025",
+        "startedAt": "2026-11-09T05:49:17.483Z",
+        "steps": [
+          {
+            "index": 1,
+            "observed": {
+              "package": "com.android.settings",
+              "screenType": "settings_navigation",
+              "screenHash": "3d0003adb004f07336f179ac6848c82823a4ac97bde400268f1107f7a6c1bd17",
+              "capturedAt": "2026-11-09T05:49:21.126Z",
+              "elements": [
+                {
+                  "id": "0259e7db2a2c5ff5d04a",
+                  "label": "Settings search",
+                  "actions": [
+                    "tap"
+                  ]
+                }
+              ],
+              "operations": [
+                "back",
+                "finish",
+                "ask"
+              ]
+            },
+            "facts": {},
+            "goalVerified": false,
+            "modelRequested": true,
+            "usage": {
+              "inputTokens": 620,
+              "outputTokens": 40
+            },
+            "model": "gpt-6.1-terra",
+            "provider": "letsur",
+            "plan": {
+              "operation": "tap",
+              "elementId": "0259e7db2a2c5ff5d04a",
+              "reason": "Open Settings search"
+            },
+            "effectStarted": true,
+            "after": {
+              "package": "outside_scope",
+              "screenType": "outside_scope",
+              "screenHash": "efc53c428471d1f8a3d1b6feae691134c6f58cd1a366e1405039337080b391d0",
+              "capturedAt": "2026-11-09T05:49:33.235Z",
+              "elements": [],
+              "operations": [
+                "open",
+                "finish",
+                "ask"
+              ]
+            },
+            "result": "screen_changed"
+          }
+        ],
+        "usage": {
+          "inputTokens": 620,
+          "outputTokens": 40,
+          "reservedTokens": 5852
+        },
+        "outcome": "needs_verification",
+        "verified": false,
+        "elapsedMs": 16008,
+        "error": "승인 앱을 벗어났어요. 새 승인이 필요해요.",
+        "requiresNewApproval": true,
+        "finishedAt": "2026-11-09T05:49:33.491Z"
+      },
+      "frameCapturedAt": "2026-11-09T05:49:39.163Z"
+    },
+    "sms_draft": {
+      "status": "needs_verification",
+      "passed": false,
+      "startedAt": "2026-11-09T05:49:39.287Z",
+      "planning": {
+        "model": "gpt-6.1-terra",
+        "provider": "letsur",
+        "usage": {
+          "inputTokens": 1166,
+          "outputTokens": 78
+        },
+        "scope": {
+          "goal": "sms_draft",
+          "contactId": "bdc62a95-6d82-460b-823a-56b42ccfb090",
+          "body": "테스트용 문자 초안입니다. 전송하지 않습니다.",
+          "maxSteps": 3,
+          "maxSeconds": 25,
+          "maxTokens": 20000,
+          "allowedApps": [
+            "com.android.messaging",
+            "com.google.android.apps.messaging",
+            "com.android.mms"
+          ],
+          "allowedActions": [
+            "compose"
+          ],
+          "version": 1
+        }
+      },
+      "reason": "지원되는 기본 앱이 없거나 앱 선택이 필요해요.",
+      "agentReport": {
+        "version": 1,
+        "source": "android-ui-hierarchy",
+        "goal": "sms_draft",
+        "scopeHash": "8e37ce5e1c9ebfdeff05a6da8b519578df3ae204b0fdc80d57177c4706fe487b",
+        "startedAt": "2026-11-09T05:49:57.682Z",
+        "steps": [
+          {
+            "index": 1,
+            "observed": {
+              "package": "outside_scope",
+              "screenType": "outside_scope",
+              "screenHash": "efc53c428471d1f8a3d1b6feae691134c6f58cd1a366e1405039337080b391d0",
+              "capturedAt": "2026-11-09T05:50:01.639Z",
+              "elements": [],
+              "operations": [
+                "compose",
+                "finish",
+                "ask"
+              ]
+            },
+            "facts": {
+              "exactRecipientAndBodyVisible": false
+            },
+            "goalVerified": false,
+            "modelRequested": true,
+            "usage": {
+              "inputTokens": 545,
+              "outputTokens": 28
+            },
+            "model": "gpt-6.1-terra",
+            "provider": "letsur",
+            "plan": {
+              "operation": "compose",
+              "elementId": "",
+              "reason": "Open the approved messaging app and compose the draft."
+            }
+          }
+        ],
+        "usage": {
+          "inputTokens": 545,
+          "outputTokens": 28,
+          "reservedTokens": 5486
+        },
+        "outcome": "needs_confirmation",
+        "verified": false,
+        "elapsedMs": 12886,
+        "error": "지원되는 기본 앱이 없거나 앱 선택이 필요해요.",
+        "requiresNewApproval": true,
+        "finishedAt": "2026-11-09T05:50:10.568Z"
+      },
+      "frameCapturedAt": "2026-11-09T05:50:17.325Z"
+    },
+    "alarm": {
+      "status": "cancelled",
+      "passed": false,
+      "startedAt": "2026-11-09T05:50:17.668Z",
+      "planning": {
+        "model": "gpt-6.1-terra",
+        "provider": "letsur",
+        "usage": {
+          "inputTokens": 1181,
+          "outputTokens": 119
+        },
+        "scope": {
+          "goal": "alarm",
+          "hour": 23,
+          "minute": 59,
+          "label": "Molla test",
+          "maxSteps": 3,
+          "maxSeconds": 25,
+          "maxTokens": 20000,
+          "allowedApps": [
+            "com.android.deskclock",
+            "com.google.android.deskclock"
+          ],
+          "allowedActions": [
+            "set_alarm"
+          ],
+          "version": 1
+        }
+      },
+      "agentReport": {
+        "version": 1,
+        "source": "android-ui-hierarchy",
+        "goal": "alarm",
+        "scopeHash": "04b79cd20ce7be0583a1e2eec0b465f9b2ca410fa2d51e196aa7da4495c3a33d",
+        "startedAt": "2026-11-09T05:50:29.145Z",
+        "steps": [
+          {
+            "index": 1,
+            "observed": {
+              "package": "outside_scope",
+              "screenType": "outside_scope",
+              "screenHash": "efc53c428471d1f8a3d1b6feae691134c6f58cd1a366e1405039337080b391d0",
+              "capturedAt": "2026-11-09T05:50:45.549Z",
+              "elements": [],
+              "operations": [
+                "set_alarm",
+                "finish",
+                "ask"
+              ]
+            },
+            "facts": {
+              "clockFormat": "null",
+              "exactTimeLabelEnabledOnceVisible": false
+            },
+            "goalVerified": false,
+            "modelRequested": true
+          }
+        ],
+        "usage": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "reservedTokens": 5486
+        },
+        "outcome": "needs_confirmation",
+        "verified": false,
+        "elapsedMs": 20527,
+        "error": "AI 응답 시간이 초과되어 중단했어요. 작업은 실행하지 않았어요.",
+        "requiresNewApproval": true,
+        "finishedAt": "2026-11-09T05:50:49.672Z"
+      },
+      "screenEvidenceError": "Screen observation did not finish before VM shutdown",
+      "frameError": "내 Android를 시작하고 연결 상태를 확인해 주세요.",
+      "reason": "중단 후 실행 응답을 받았어요. 기기에서 결과를 직접 확인해 주세요."
+    }
+  },
+  "uiErrors": [],
+  "accountBefore": {
+    "balanceCents": 465,
+    "rateCentsPerMinute": 5,
+    "activeSessions": 0,
+    "states": []
+  },
+  "preflight": {
+    "model": "gpt-6.1-terra",
+    "provider": "letsur",
+    "usage": {
+      "inputTokens": 174,
+      "outputTokens": 20
+    },
+    "tool": "android_ask"
+  },
+  "quoteText": "내 Android\n사용 시간\n1분\n2분\n3분\n비용 확인\n연결 확인\nVM 종료\n실제 화면 보기\n\n최대 3분 · VM $0.15. AI 사용료는 별도예요.\n\n이 비용으로 VM 시작",
+  "startRequestedAt": "2026-11-09T05:48:19.610Z",
+  "startHttpStatus": 200,
+  "connectionNotice": "VM 요청을 처리 중이에요.",
+  "expiresAt": "2026-11-09T05:51:28.893Z",
+  "stopRequestedAt": "2026-11-09T05:50:49.611Z",
+  "cleanup": "stopped",
+  "accountAfter": {
+    "activeSessions": 0,
+    "balanceCents": 455,
+    "states": []
+  },
+  "vmUsedUsd": 0.1,
+  "video": "Stored locally; not committed",
+  "finishedAt": "2026-11-09T05:51:23.943Z",
+  "cleanupVerifiedAt": "2026-11-09T05:52:01.977Z",
+  "testedCommit": "66d114e2682b2fc59d46e0b83ec2a14e67f90f27",
+  "postRunFixesLiveVerified": false,
+  "smsHandlerProbe": "No activities found for android.intent.action.SENDTO with smsto URI",
+  "alarmHandlerProbe": "com.android.deskclock/.HandleSetAlarmApiCalls",
+  "planningUsageNote": "Planning usage is the final planner response only, not the total of any preceding contact lookup calls. Cancelled model requests may incur usage not returned to the client."
+}
